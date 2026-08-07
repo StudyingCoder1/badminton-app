@@ -585,12 +585,12 @@ function importExcel(e){
       if(wb.SheetNames.includes('羽毛球库存台账')){
         const rows=XLSX.utils.sheet_to_json(wb.Sheets['羽毛球库存台账'],{header:1});
         for(let r=2;r<rows.length;r++){const row=rows[r];if(!row[0]||row[0]==='累计汇总')continue;const bk=num(row[3]),p=num(row[4]);if(!bk&&!p)continue;invs.push({id:Date.now()+r,date:String(row[0]).slice(0,10),channel:row[1]||'',brand:row[2]||'',buckets:bk,pricePerBucket:p,totalAmount:bk*p,totalBalls:bk*12});imported++}
-        invs.sort((a,b)=>b.date.localeCompare(a.date()));
+        invs.sort((a,b)=>b.date.localeCompare(a.date));
       }
       if(wb.SheetNames.includes('资金支出账单')){
         const rows=XLSX.utils.sheet_to_json(wb.Sheets['资金支出账单'],{header:1});
         for(let r=1;r<rows.length;r++){const row=rows[r];if(!row[0]||row[2]==='累计汇总')continue;const q=num(row[3]),u=num(row[4]);if(!q&&!u)continue;expenses.push({id:Date.now()+r,date:String(row[0]).slice(0,10),channel:row[1]||'',item:row[2]||'',quantity:q,unitPrice:u,totalAmount:q*u});imported++}
-        expenses.sort((a,b)=>b.date.localeCompare(a.date()));
+        expenses.sort((a,b)=>b.date.localeCompare(a.date));
       }
       saveData();renderGame();renderInv();renderExp();renderAll();alert(`导入成功！共 ${imported} 条记录`);
     }catch(err){alert('导入失败：'+err.message)}
