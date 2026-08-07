@@ -606,16 +606,18 @@ function clearAll(){
 
 // ===== GitHub =====
 function getGhConfig(){try{return JSON.parse(localStorage.getItem(SK_GH)||'{}')}catch(e){return {}}}
-function openGhModal(){const cfg=getGhConfig();document.getElementById('ghOwner').value=cfg.owner||'StudyingCoder1';document.getElementById('ghRepo').value=cfg.repo||'badminton-data';document.getElementById('ghBranch').value=cfg.branch||'main';document.getElementById('ghPath').value=cfg.path||'data/records.json';document.getElementById('ghToken').value=cfg.token||'';document.getElementById('ghModal').classList.add('show')}
+let ghAction=null;
+function openGhModal(){const cfg=getGhConfig();document.getElementById('ghOwner').value=cfg.owner||'StudyingCoder1';document.getElementById('ghRepo').value=cfg.repo||'badminton-data';document.getElementById('ghBranch').value=cfg.branch||'main';document.getElementById('ghPath').value=cfg.path||'data/records.json';document.getElementById('ghToken').value='';document.querySelector('#ghModal .btn-primary').textContent=ghAction==='sync'?'☁️ 确认同步':ghAction==='pull'?'⬇️ 确认拉取':'保存';document.getElementById('ghModal').classList.add('show')}
 function closeGhModal(){document.getElementById('ghModal').classList.remove('show')}
 function openTipsModal(){document.getElementById('tipsModal').classList.add('show')}
 function closeTipsModal(){document.getElementById('tipsModal').classList.remove('show')}
-function saveGhConfig(){const cfg={owner:document.getElementById('ghOwner').value.trim(),repo:document.getElementById('ghRepo').value.trim(),branch:document.getElementById('ghBranch').value.trim()||'main',path:document.getElementById('ghPath').value.trim()||'data/records.json',token:document.getElementById('ghToken').value.trim()};if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写用户名、仓库名和Token');return}localStorage.setItem(SK_GH,JSON.stringify(cfg));closeGhModal();alert('✅ 配置已保存')}
+function saveGhConfig(){const cfg={owner:document.getElementById('ghOwner').value.trim(),repo:document.getElementById('ghRepo').value.trim(),branch:document.getElementById('ghBranch').value.trim()||'main',path:document.getElementById('ghPath').value.trim()||'data/records.json',token:document.getElementById('ghToken').value.trim()};if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写Token');return}localStorage.setItem(SK_GH,JSON.stringify(cfg));closeGhModal();const a=ghAction;ghAction=null;if(a==='sync')doSync();else if(a==='pull')doPull();else alert('✅ 配置已保存')}
 function b64encode(str){return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,(m,p)=>String.fromCharCode('0x'+p)))}
 function b64decode(b64){return decodeURIComponent(atob(b64).split('').map(c=>'%'+c.charCodeAt(0).toString(16).padStart(2,'0')).join(''))}
-async function githubSync(){
-  const cfg=getGhConfig();if(!cfg.owner||!cfg.repo||!cfg.token){openGhModal();return}
-  const btn=event.target,old=btn.textContent;btn.textContent='⏳ 同步中';btn.disabled=true;
+function githubSync(){ghAction='sync';openGhModal()}
+async function doSync(){
+  const cfg=getGhConfig();if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写Token');return}
+  const btn=document.querySelector('button[onclick="githubSync()"]'),old=btn.textContent;btn.textContent='⏳ 同步中';btn.disabled=true;
   try{
     const url=`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}`;
     const h={'Authorization':'token '+cfg.token,'Accept':'application/vnd.github+json'};
@@ -627,10 +629,11 @@ async function githubSync(){
     btn.textContent='✅ 已同步';setTimeout(()=>{btn.textContent=old;btn.disabled=false},2000);alert('✅ 同步成功！');
   }catch(err){btn.textContent=old;btn.disabled=false;alert('❌ 失败：'+err.message)}
 }
-async function githubPull(){
-  const cfg=getGhConfig();if(!cfg.owner||!cfg.repo||!cfg.token){openGhModal();return}
+function githubPull(){ghAction='pull';openGhModal()}
+async function doPull(){
+  const cfg=getGhConfig();if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写Token');return}
   if(!confirm('拉取会覆盖本地数据，确定？'))return;
-  const btn=event.target,old=btn.textContent;btn.textContent='⏳ 拉取中';btn.disabled=true;
+  const btn=document.querySelector('button[onclick="githubPull()"]'),old=btn.textContent;btn.textContent='⏳ 拉取中';btn.disabled=true;
   try{
     const r=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}?ref=${cfg.branch}`,{headers:{'Authorization':'token '+cfg.token,'Accept':'application/vnd.github+json'}});
     if(!r.ok)throw new Error(r.status===404?'文件不存在，请先同步':'HTTP '+r.status);
