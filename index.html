@@ -319,11 +319,11 @@ th,td{padding:7px 6px;font-size:12px}
 <div class="modal-overlay" id="tipsModal"><div class="modal" style="max-width:520px;max-height:80vh;overflow-y:auto">
   <h3>📐 计算公式说明</h3>
   <div style="font-size:13px;line-height:1.8;color:var(--t1)">
-    <div style="background:var(--blue-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>🎾 球种类单价（自动计算）</b><br>= 库存台账同品牌型号的总采购额 ÷ 总入库只数<br><span style="color:var(--t2);font-size:12px">例：红超买2次共360元/24只 → 单价15元/只</span></div>
-    <div style="background:var(--green-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>🏸 人均球费补收（自动计算）</b><br>= 球消耗 × 球单价 ÷ 实到人数<br><span style="color:var(--t2);font-size:12px">例：8只×15元÷8人 = 15元/人</span></div>
-    <div style="background:var(--red-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>📉 成本</b><br>= 球消耗×球单价 + 场地费 + 组织者参与×(人均报名费+人均球费补收)<br><span style="color:var(--t2);font-size:12px">组织者免收的部分算进成本</span></div>
-    <div style="background:var(--purple-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>💰 收益</b><br>= 人均报名费×报名人数<br>+ 人均球费补收×实到人数<br>+ 额外收入<br>+ 球消耗×(人均球费补收-球单价)<br><span style="color:var(--t2);font-size:12px">最后一项是球费差价利润</span></div>
-    <div style="background:var(--orange-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>✅ 净收益 = 收益 - 成本</b></div>
+    <div style="background:var(--orange-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>🎾 球定价（按品牌记住）</b><br>补收球费按定价收取，如红超18/个、橙超8/个、华美F6 8/个<br><span style="color:var(--t2);font-size:12px">在分组里选中球种类后自动带出，可直接修改，之后同品牌自动记住</span></div>
+    <div style="background:var(--green-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>🏸 人均球费补收（自动）</b><br>= (球消耗 + 额外加球) × 球定价 ÷ 实到人数<br><span style="color:var(--t2);font-size:12px">例：5个红超×18元÷7人 = 12.86元/人</span></div>
+    <div style="background:var(--red-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>📉 成本</b><br>= 球消耗 × 球成本(库存加权采购价) + 场地费 + 组织者参与×(人均报名费+人均球费补收)<br><span style="color:var(--t2);font-size:12px">组织者免收的部分算进成本；额外加球不耗库存、不计成本</span></div>
+    <div style="background:var(--purple-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>💰 收入</b><br>= 人均报名费×报名人数 + (球消耗+额外加球)×球定价<br><span style="color:var(--t2);font-size:12px">球费利润 = 球消耗×(定价-成本) + 额外加球×定价</span></div>
+    <div style="background:var(--orange-bg);padding:10px;border-radius:8px;margin-bottom:8px"><b>✅ 净收益 = 收入 - 成本</b><br><span style="color:var(--t2);font-size:12px">例：红超定价18、采购成本15，每消耗1个赚3元差价；多加1个红超=额外收入18元</span></div>
     <div style="background:#f8fafc;padding:10px;border-radius:8px;margin-bottom:8px"><b>♻️ 旧球回收</b><br>回收收入 = 回收个数 × 回收单价（自填）</div>
     <div style="background:#f8fafc;padding:10px;border-radius:8px"><b>💵 备用资金</b><br>= 启动资金 + 累计盈利 - 球采购支出 - 其他资金支出</div>
   </div>
@@ -333,8 +333,12 @@ th,td{padding:7px 6px;font-size:12px}
 <div class="toast" id="toast"></div>
 
 <script>
-const SK_G='bm_games',SK_I='bm_inventory',SK_E='bm_expenses',SK_F='bm_init_fund',SK_GH='bm_github_config',SK_CT='bm_court_types',SK_LB='bm_last_backup',SK_BS='bm_backup_snooze',SK_FU='bm_first_use';
+const SK_G='bm_games',SK_I='bm_inventory',SK_E='bm_expenses',SK_F='bm_init_fund',SK_GH='bm_github_config',SK_CT='bm_court_types',SK_LB='bm_last_backup',SK_BS='bm_backup_snooze',SK_FU='bm_first_use',SK_BP='bm_ball_prices';
 if(!localStorage.getItem(SK_FU))localStorage.setItem(SK_FU,String(Date.now()));
+let ballPrices=(()=>{try{const v=JSON.parse(localStorage.getItem(SK_BP)||'{}');return v&&typeof v==='object'?v:{}}catch(e){return{}}})();
+if(ballPrices['红超']===undefined)ballPrices['红超']=18;
+if(ballPrices['橙超']===undefined)ballPrices['橙超']=8;
+if(ballPrices['华美F6']===undefined)ballPrices['华美F6']=8;
 let games=JSON.parse(localStorage.getItem(SK_G)||'[]');
 let courtTypes=(()=>{try{const v=JSON.parse(localStorage.getItem(SK_CT)||localStorage.getItem('bm_venues')||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}})();
 if(courtTypes.length===0&&games.length===0)courtTypes=['萌新养生场','微微对抗场','3+自由场'];
@@ -424,14 +428,32 @@ function getBallOptions(sel){
   const t=getBallTypes();const keys=Object.keys(t);
   if(keys.length===0)return '<option value="">先在库存台账添加采购</option>';
   let h='<option value="">选择球种类</option>';
-  keys.forEach(b=>{const p=t[b].up.toFixed(2);h+=`<option value="${esc(b)}" data-price="${p}"${b===sel?' selected':''}>${esc(b)} (¥${p}/只)</option>`});
+  keys.forEach(b=>{const p=getBallPrice(b).toFixed(2);h+=`<option value="${esc(b)}" data-price="${p}"${b===sel?' selected':''}>${esc(b)} (¥${p}/个)</option>`});
   return h;
 }
+// 球定价：按品牌记住（手动设定，默认回退采购成本）
+function getBallPrice(brand){
+  if(!brand)return 0;
+  if(ballPrices[brand]!==undefined)return num(ballPrices[brand]);
+  const t=getBallTypes()[brand];
+  return t?t.up:0;
+}
 function onBallTypeChange(sel){
-  const row=sel.closest('.group-row');const opt=sel.options[sel.selectedIndex];
-  const p=num(opt.getAttribute('data-price'));
-  row.querySelector('.gp-ballunit').value=p>0?p:'';
+  const row=sel.closest('.group-row');const brand=sel.value;
+  const t=brand?getBallTypes()[brand]:null;
+  const cost=t?t.up:0;
+  row.querySelector('.gp-ballunit').value=cost>0?cost:'';
+  const priceInput=row.querySelector('.gp-unitprice');
+  const p=getBallPrice(brand);
+  priceInput.value=p>0?p:'';
   calcGame();
+}
+function onUnitPriceInput(inp){
+  const row=inp.closest('.group-row');const brand=row.querySelector('.gp-balltype').value;
+  const p=num(inp.value);
+  if(brand){ballPrices[brand]=p;localStorage.setItem(SK_BP,JSON.stringify(ballPrices))}
+  document.querySelectorAll('.group-row').forEach(r=>{if(r!==row&&r.querySelector('.gp-balltype').value===brand)r.querySelector('.gp-unitprice').value=p});
+  refreshBallTypeOptions();calcGame();
 }
 // 场地类型下拉：已保存类型 ∪ 历史记录中出现过的类型，支持即时新增
 function getCourtTypeNames(){
@@ -470,6 +492,7 @@ function refreshCourtTypeOptions(){
   });
 }
 // 唯一的分组计算入口：表单实时计算、保存、账单全都走这里，改公式只改这一处
+// 计费口径：球费按定价收，成本按库存加权采购价，差价即利润；额外加球按定价计收入不耗库存
 function calcGroupCore(g){
   const people=num(g.people);
   const orgCount=Math.min(num(g.orgCount),people);
@@ -477,24 +500,28 @@ function calcGroupCore(g){
   const venueCost=num(g.venueCost);
   const ballUsed=num(g.ballUsed);
   const extraBalls=num(g.extraBalls);
+  const ballPrice=num(g.ballPrice);
   const ballUnit=num(g.ballUnit);
   const price=num(g.price);
   const ballCost=r2(ballUsed*ballUnit);
-  const ballPricePerPerson=attend>0?r2(ballCost/attend):0;
+  const ballRevenue=r2((ballUsed+extraBalls)*ballPrice);
+  const ballProfit=r2(ballUsed*(ballPrice-ballUnit)+extraBalls*ballPrice);
+  const ballPricePerPerson=attend>0?r2(ballRevenue/attend):0;
   const orgCost=r2(orgCount*(price+ballPricePerPerson));
   const groupCost=r2(ballCost+venueCost+orgCost);
-  const groupIncome=r2(price*people+ballPricePerPerson*attend+extraBalls+ballUsed*(ballPricePerPerson-ballUnit));
-  return {name:g.name||'未命名',people,orgCount,attend,venueCost,ballUsed,extraBalls,ballType:g.ballType||'',ballUnit,price,ballCost,ballPricePerPerson,ballChargeTotal:r2(ballPricePerPerson*attend),orgCost,groupCost,groupIncome,groupProfit:r2(groupIncome-groupCost),perPerson:r2(price+ballPricePerPerson)};
+  const groupIncome=r2(price*people+ballRevenue);
+  return {name:g.name||'未命名',people,orgCount,attend,venueCost,ballUsed,extraBalls,ballType:g.ballType||'',ballUnit,ballPrice,price,ballCost,ballRevenue,ballProfit,ballPricePerPerson,ballChargeTotal:ballRevenue,orgCost,groupCost,groupIncome,groupProfit:r2(groupIncome-groupCost),perPerson:r2(price+ballPricePerPerson)};
 }
 function readRow(row){
   const q=s=>row.querySelector(s).value;
   const name=q('.gp-name')==='__ADD__'?'':q('.gp-name').trim();
-  return {name,people:num(q('.gp-people')),orgCount:num(q('.gp-org')),attend:num(q('.gp-attend')),venueCost:num(q('.gp-venue')),ballUsed:num(q('.gp-ball')),extraBalls:num(q('.gp-extra')),ballType:q('.gp-balltype'),ballUnit:num(q('.gp-ballunit')),price:num(q('.gp-price'))};
+  return {name,people:num(q('.gp-people')),orgCount:num(q('.gp-org')),attend:num(q('.gp-attend')),venueCost:num(q('.gp-venue')),ballUsed:num(q('.gp-ball')),extraBalls:num(q('.gp-extra')),ballType:q('.gp-balltype'),ballUnit:num(q('.gp-ballunit')),ballPrice:num(q('.gp-unitprice')),price:num(q('.gp-price'))};
 }
 document.getElementById('gDate').valueAsDate=new Date();
 function addGroup(data){
   const div=document.createElement('div');div.className='group-row';const d=data||{};
   const autoUnit=d.ballUnit||(d.ballType?(getBallTypes()[d.ballType]||{}).up||'':'');
+  const autoPrice=d.ballPrice!=null?d.ballPrice:(d.ballType?getBallPrice(d.ballType):'');
   div.innerHTML=`
     <div class="fg"><label>场地类型</label><select class="gp-name" onchange="onCourtTypeChange(this)">${getCourtTypeOptions(d.name||'')}</select></div>
     <div class="fg"><label>报名人数</label><input type="number" class="gp-people" placeholder="10" min="0" value="${d.people||''}" oninput="calcGame()"></div>
@@ -503,9 +530,10 @@ function addGroup(data){
     <div class="fg"><label>场地费(成本)</label><input type="number" class="gp-venue" placeholder="200" step="0.01" min="0" value="${d.venueCost||''}" oninput="calcGame()"></div>
     <div class="fg"><label>球消耗(只)</label><input type="number" class="gp-ball" placeholder="8" min="0" value="${d.ballUsed||''}" oninput="calcGame()"></div>
     <div class="fg" style="flex:0 0 auto"><label>&nbsp;</label><button class="btn btn-sm" style="white-space:nowrap" onclick="addBallTube(this)" title="快捷加一筒球">➕1筒</button></div>
-    <div class="fg"><label>额外收入(元)</label><input type="number" class="gp-extra" placeholder="0" step="0.01" min="0" value="${d.extraBalls||0}" oninput="calcGame()" style="border-color:#fde68a" title="直接填写额外收入金额"></div>
+    <div class="fg"><label>额外加球(个)</label><input type="number" class="gp-extra" placeholder="0" min="0" step="1" value="${d.extraBalls||0}" oninput="calcGame()" style="border-color:#fde68a" title="多收的球，按定价计收入，不耗库存成本"></div>
     <div class="fg"><label>球种类</label><select class="gp-balltype" onchange="onBallTypeChange(this)">${getBallOptions(d.ballType)}</select></div>
-    <div class="fg"><label>球单价(自动)</label><input type="text" class="gp-ballunit auto" readonly value="${autoUnit||''}"></div>
+    <div class="fg"><label>球定价(元/个)</label><input type="number" class="gp-unitprice" placeholder="18" step="0.01" min="0" value="${autoPrice||''}" oninput="onUnitPriceInput(this)" style="border-color:#fde68a" title="向成员收取的单价，按品牌记住，可直接修改"></div>
+    <div class="fg"><label>球成本(自动)</label><input type="text" class="gp-ballunit auto" readonly value="${autoUnit||''}" title="库存加权平均采购成本"></div>
     <div class="fg"><label>人均报名费</label><input type="number" class="gp-price" placeholder="25" step="0.01" min="0" value="${d.price||''}" oninput="calcGame()"></div>
     <div class="fg"><label>人均球费补收(自动)</label><input type="text" class="gp-ballprice auto" readonly></div>
     <div class="fg"><label>人均应付(自动)</label><input type="text" class="gp-perperson auto" readonly style="font-weight:700;color:var(--green-dark)"></div>
@@ -567,7 +595,7 @@ function delGame(id){
   showToast('已删除 '+removed.date+' 的记录',()=>{games.splice(Math.min(idx,games.length),0,removed);saveData();renderGame();showToast('已恢复')});
 }
 function normGroups(g){
-  if(g.groups&&g.groups.length>0)return g.groups.map(gp=>({...gp,orgCount:gp.orgCount||0,attend:gp.attend||gp.people||0,extraBalls:gp.extraBalls||0,ballType:gp.ballType||'',ballChargeTotal:gp.ballChargeTotal||r2((gp.ballPricePerPerson||0)*(gp.attend||gp.people||0)),ballPricePerPerson:gp.ballPricePerPerson||0}));
+  if(g.groups&&g.groups.length>0)return g.groups.map(gp=>({...gp,orgCount:gp.orgCount||0,attend:gp.attend||gp.people||0,extraBalls:gp.extraBalls||0,ballType:gp.ballType||'',ballPrice:gp.ballPrice!=null?gp.ballPrice:(gp.ballUnit||0),ballChargeTotal:gp.ballChargeTotal||0,ballPricePerPerson:gp.ballPricePerPerson||0}));
   return [{name:'默认',people:g.people||0,orgCount:0,attend:g.people||0,extraBalls:0,ballType:'',venueCost:g.venueCost||0,ballUsed:g.ballUsed||0,ballUnit:g.ballUnit||0,price:g.price||0,ballCost:g.ballCost||0,ballChargeTotal:g.ballCost||0,ballPricePerPerson:0,groupCost:(g.venueCost||0)+(g.ballCost||0),groupIncome:(g.people||0)*(g.price||0),groupProfit:(g.people||0)*(g.price||0)-((g.venueCost||0)+(g.ballCost||0))}];
 }
 function renderGame(){
@@ -593,7 +621,7 @@ function renderGame(){
     empty.style.display='none';
     body.innerHTML=shown.map(g=>{
       const cls=g.profit>=0?'pos':'neg';const groups=normGroups(g);
-      const detail=groups.map(gp=>`<span class="gp-tag${gp.orgCount>0?' org-tag':''}">${esc(gp.name||'未命名')} 报${gp.people}${gp.attend!=gp.people?'/到'+gp.attend:''}${gp.orgCount>0?'(组'+gp.orgCount+')':''}${num(gp.extraBalls)>0?'+额外¥'+num(gp.extraBalls).toFixed(0):''}</span>`).join(' ');
+      const detail=groups.map(gp=>`<span class="gp-tag${gp.orgCount>0?' org-tag':''}">${esc(gp.name||'未命名')} 报${gp.people}${gp.attend!=gp.people?'/到'+gp.attend:''}${gp.orgCount>0?'(组'+gp.orgCount+')':''}${num(gp.extraBalls)>0?'+球'+num(gp.extraBalls):''}</span>`).join(' ');
       return `<tr>
         <td><span style="cursor:pointer;color:var(--blue);font-weight:600" onclick="toggleDetail(${g.id})">${g.date} ▸</span></td>
         <td style="text-align:left">${esc(g.platform||'-')}</td><td>${esc(g.duration||'-')}</td>
@@ -605,11 +633,17 @@ function renderGame(){
         <td class="op-cell"><button class="bill-btn" onclick="showBill(${g.id})">📢账单</button><button class="edit-btn" onclick="editGame(${g.id})">✏️编辑</button><button class="del-btn" onclick="delGame(${g.id})">🗑删除</button></td></tr>
       <tr id="detail-${g.id}" style="display:none"><td colspan="11" style="background:#f8fafc;padding:10px 20px">
         <div class="group-detail">${groups.map(gp=>{
-          const bc=num(gp.ballCost)||r2(num(gp.ballUsed)*num(gp.ballUnit));
-          const bpp=num(gp.ballPricePerPerson)||(gp.attend>0?r2(bc/gp.attend):0);
-          const regIncome=r2(num(gp.price)*gp.people);const ballIncome=r2(bpp*gp.attend);const extraIncome=num(gp.extraBalls);const diffIncome=r2(gp.ballUsed*(bpp-num(gp.ballUnit)));
-          const gi=r2(regIncome+ballIncome+extraIncome+diffIncome);const gc=r2(bc+num(gp.venueCost)+gp.orgCount*(num(gp.price)+bpp));const gp_=r2(gi-gc);
-          return `<div><b>${esc(gp.name||'未命名')}</b>：<br>　📝 报名费：${gp.people}人 × ¥${num(gp.price).toFixed(2)} = <span style="color:var(--blue)">¥${regIncome.toFixed(2)}</span><br>　🏸 球费补收：${gp.attend}人 × ¥${bpp.toFixed(2)} = <span style="color:var(--blue)">¥${ballIncome.toFixed(2)}</span>${extraIncome>0?'<br>　➕ 额外收入：<span style="color:var(--blue)">¥'+extraIncome.toFixed(2)+'</span>':''}<br>　📊 球费差价：${gp.ballUsed}球 × (¥${bpp.toFixed(2)}-¥${num(gp.ballUnit).toFixed(2)}) = <span style="color:var(--blue)">¥${diffIncome.toFixed(2)}</span><br>　💰 收益合计：<span style="color:var(--blue);font-weight:600">¥${gi.toFixed(2)}</span><br>　📉 成本：球${gp.ballUsed}×¥${num(gp.ballUnit).toFixed(2)}=¥${bc.toFixed(2)} + 场地¥${num(gp.venueCost).toFixed(2)}${gp.orgCount>0?' + 组织者'+gp.orgCount+'×(¥'+num(gp.price).toFixed(2)+'+¥'+bpp.toFixed(2)+')=¥'+r2(gp.orgCount*(num(gp.price)+bpp)).toFixed(2):''} = <span style="color:var(--orange);font-weight:600">¥${gc.toFixed(2)}</span><br>　👤 人均应付：¥${num(gp.price).toFixed(2)}+¥${bpp.toFixed(2)} = <span style="font-weight:700">¥${r2(num(gp.price)+bpp).toFixed(2)}</span><br>　<span style="color:${gp_>=0?'var(--green)':'var(--red)'};font-weight:700;font-size:13px">净收益：${gp_>=0?'+':''}¥${gp_.toFixed(2)}</span></div>`;
+          const N=num(gp.ballUsed),K=num(gp.extraBalls);
+          const P=num(gp.ballPrice)!=null?num(gp.ballPrice):num(gp.ballUnit);
+          const C=num(gp.ballUnit);
+          const bc=num(gp.ballCost)||r2(N*C);
+          const rev=num(gp.ballChargeTotal)||r2((N+K)*P);
+          const bpp=num(gp.ballPricePerPerson)||(gp.attend>0?r2(rev/gp.attend):0);
+          const regIncome=r2(num(gp.price)*gp.people);
+          const ballProfit=r2(N*(P-C)+K*P);
+          const gi=r2(regIncome+rev);
+          const gc=r2(bc+num(gp.venueCost)+gp.orgCount*(num(gp.price)+bpp));const gp_=r2(gi-gc);
+          return `<div><b>${esc(gp.name||'未命名')}</b>：<br>　📝 报名费：${gp.people}人 × ¥${num(gp.price).toFixed(2)} = <span style="color:var(--blue)">¥${regIncome.toFixed(2)}</span><br>　🏸 球费：(${N}${K>0? '+'+K:''})球 × ¥${P.toFixed(2)} = <span style="color:var(--blue)">¥${rev.toFixed(2)}</span>（人均补收 ¥${bpp.toFixed(2)} × ${gp.attend}人）${K>0?'<br>　➕ 额外加球：'+K+'个 × ¥'+P.toFixed(2)+' = <span style="color:var(--blue)">¥'+r2(K*P).toFixed(2)+'</span>':''}${ballProfit!==0?'<br>　📊 球费利润：'+N+'球×(¥'+P.toFixed(2)+'-¥'+C.toFixed(2)+')'+(K>0?' + '+K+'球×¥'+P.toFixed(2):'')+' = <span style="color:var(--blue)">¥'+ballProfit.toFixed(2)+'</span>':''}<br>　💰 收益合计：<span style="color:var(--blue);font-weight:600">¥${gi.toFixed(2)}</span><br>　📉 成本：球${N}×¥${C.toFixed(2)}=¥${bc.toFixed(2)} + 场地¥${num(gp.venueCost).toFixed(2)}${gp.orgCount>0?' + 组织者'+gp.orgCount+'×(¥'+num(gp.price).toFixed(2)+'+¥'+bpp.toFixed(2)+')=¥'+r2(gp.orgCount*(num(gp.price)+bpp)).toFixed(2):''} = <span style="color:var(--orange);font-weight:600">¥${gc.toFixed(2)}</span><br>　👤 人均应付：¥${num(gp.price).toFixed(2)}+¥${bpp.toFixed(2)} = <span style="font-weight:700">¥${r2(num(gp.price)+bpp).toFixed(2)}</span><br>　<span style="color:${gp_>=0?'var(--green)':'var(--red)'};font-weight:700;font-size:13px">净收益：${gp_>=0?'+':''}¥${gp_.toFixed(2)}</span></div>`;
         }).join('')}</div>
       </td></tr>`;
     }).join('');
@@ -735,10 +769,10 @@ function exportExcel(){
   if(typeof XLSX==='undefined'){alert('导出组件未加载（需联网加载 CDN），请检查网络后重试');return}
   const wb=XLSX.utils.book_new();
   // Sheet1: 单场收支
-  const gData=[['场次日期','订场平台','场地时长','场地类型','报名人数','组织者参与','实到人数','人均报名费','人均球费补收','场地费','球消耗','额外收入(元)','球种类','球单价','球成本','球费补收总额','分组成本','分组收入','分组盈亏','旧球回收个数','回收单价','旧球回收收入','整场总成本','整场总收入','整场盈亏']];
+  const gData=[['场次日期','订场平台','场地时长','场地类型','报名人数','组织者参与','实到人数','人均报名费','人均球费补收','场地费','球消耗','额外加球(个)','球种类','球定价(元/个)','球成本','球费补收总额','分组成本','分组收入','分组盈亏','旧球回收个数','回收单价','旧球回收收入','整场总成本','整场总收入','整场盈亏','球成本单价(元)']];
   let ti=0,tc=0,tp=0,tr=0;
   games.forEach(g=>{ti+=g.totalIncome;tc+=g.totalCost;tp+=g.profit;tr+=g.recycleIncome;normGroups(g).forEach((gp,idx)=>{
-    gData.push([idx===0?g.date:'',idx===0?g.platform||'':'',idx===0?g.duration||'':'',gp.name,gp.people,gp.orgCount,gp.attend,gp.price,gp.ballPricePerPerson||0,gp.venueCost,gp.ballUsed,gp.extraBalls||0,gp.ballType||'',gp.ballUnit,gp.ballCost,gp.ballChargeTotal||0,gp.groupCost,gp.groupIncome,gp.groupProfit,idx===0?g.recycle:'',idx===0?g.recycleUnit||3:'',idx===0?g.recycleIncome:'',idx===0?g.totalCost:'',idx===0?g.totalIncome:'',idx===0?g.profit:'']);
+    gData.push([idx===0?g.date:'',idx===0?g.platform||'':'',idx===0?g.duration||'':'',gp.name,gp.people,gp.orgCount,gp.attend,gp.price,gp.ballPricePerPerson||0,gp.venueCost,gp.ballUsed,gp.extraBalls||0,gp.ballType||'',gp.ballPrice!=null?gp.ballPrice:(gp.ballUnit||0),gp.ballCost,gp.ballChargeTotal||0,gp.groupCost,gp.groupIncome,gp.groupProfit,idx===0?g.recycle:'',idx===0?g.recycleUnit||3:'',idx===0?g.recycleIncome:'',idx===0?g.totalCost:'',idx===0?g.totalIncome:'',idx===0?g.profit:'',gp.ballUnit||0]);
   })});
   gData.push(['累计汇总','','','','','','','','','','','','','','','','','','','','',tr,tc,ti,tp]);
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gData),'单场打球收支表');
@@ -776,7 +810,7 @@ function importExcel(e){
       let imported=0,skipped=0;
       if(wb.SheetNames.includes('单场打球收支表')){
         const rows=XLSX.utils.sheet_to_json(wb.Sheets['单场打球收支表'],{header:1});let cur=null;
-        const parseGRow=row=>({name:String(row[3]||'默认'),people:num(row[4]),orgCount:num(row[5]),attend:num(row[6])||num(row[4]),price:num(row[7]),ballPricePerPerson:num(row[8])||0,venueCost:num(row[9]),ballUsed:num(row[10]),extraBalls:num(row[11])||0,ballType:String(row[12]||''),ballUnit:num(row[13]),ballCost:num(row[14]),ballChargeTotal:num(row[15])||0,groupCost:num(row[16]),groupIncome:num(row[17]),groupProfit:num(row[18])});
+        const parseGRow=row=>({name:String(row[3]||'默认'),people:num(row[4]),orgCount:num(row[5]),attend:num(row[6])||num(row[4]),price:num(row[7]),ballPricePerPerson:num(row[8])||0,venueCost:num(row[9]),ballUsed:num(row[10]),extraBalls:num(row[11])||0,ballType:String(row[12]||''),ballPrice:num(row[13]),ballUnit:num(row[25])||num(row[13])||0,ballCost:num(row[14]),ballChargeTotal:num(row[15])||0,groupCost:num(row[16]),groupIncome:num(row[17]),groupProfit:num(row[18])});
         const pushCur=()=>{if(!cur)return;
           cur.totalPeople=cur.groups.reduce((s,g)=>s+num(g.people),0);
           cur.totalOrg=cur.groups.reduce((s,g)=>s+num(g.orgCount),0);
@@ -833,19 +867,24 @@ function showBill(id){
 }
 function closeBillModal(){document.getElementById('billModal').classList.remove('show')}
 function billGroupLines(g){
-  const bc=num(g.ballCost)||r2(num(g.ballUsed)*num(g.ballUnit));
-  const bpp=num(g.ballPricePerPerson)||(g.attend>0?r2(bc/g.attend):0);
-  return {bc,bpp,per:r2(num(g.price)+bpp)};
+  const N=num(g.ballUsed),K=num(g.extraBalls);
+  const P=num(g.ballPrice)||num(g.ballUnit);
+  const C=num(g.ballUnit);
+  const bc=num(g.ballCost)||r2(N*C);
+  const rev=num(g.ballChargeTotal)||r2((N+K)*P);
+  const bpp=num(g.ballPricePerPerson)||(g.attend>0?r2(rev/g.attend):0);
+  return {bc,rev,bpp,per:r2(num(g.price)+bpp),ballProfit:r2(N*(P-C)+K*P)};
 }
 function buildBillHtml(g){
   const groups=normGroups(g);const tp=num(g.totalPeople)||groups.reduce((s,x)=>s+num(x.people),0);
   const avg=tp>0?num(g.totalIncome)/tp:0;const p=num(g.profit);
   let h=`<h4>🏸 羽毛球活动公示账单</h4><div class="bill-date">${g.date} ${weekDay(g.date)}${g.duration?' · 时长 '+esc(g.duration)+' 小时':''} · 报名 ${tp} 人</div>`;
   groups.forEach(gp=>{
-    const {bc,bpp,per}=billGroupLines(gp);
+    const {rev,bpp,per}=billGroupLines(gp);
+    const N=num(gp.ballUsed),K=num(gp.extraBalls),P=num(gp.ballPrice)||num(gp.ballUnit);
     h+=`<div class="bill-line"><span>🏟️ ${esc(gp.name||'未命名')}</span><span>报名${gp.people}人 / 实到${gp.attend}人${gp.orgCount>0?` / 组织者参与${gp.orgCount}人`:''}</span></div>`;
     h+=`<div class="bill-line"><span>　场地费</span><span>${fmt(gp.venueCost)}</span></div>`;
-    h+=`<div class="bill-line"><span>　球费（${gp.ballUsed}只 × ¥${num(gp.ballUnit).toFixed(2)}）</span><span>${fmt(bc)}</span></div>`;
+    h+=`<div class="bill-line"><span>　球费（${N+K}只 × ¥${P.toFixed(2)}${K>0?'，含额外加球'+K+'只':''}）</span><span>${fmt(rev)}</span></div>`;
     h+=`<div class="bill-line"><span>　人均应付（报名费 ¥${num(gp.price).toFixed(2)} + 球费补收 ¥${bpp.toFixed(2)}）</span><span>¥${per.toFixed(2)}</span></div>`;
   });
   h+=`<div class="bill-total"><span>支出合计</span><span>${fmt(g.totalCost)}</span></div>`;
@@ -860,10 +899,11 @@ function buildBillText(g){
   const avg=tp>0?num(g.totalIncome)/tp:0;const p=num(g.profit);const L=[];
   L.push(`${g.date.slice(5).replace('-','.')} 费用明细`);
   groups.forEach(gp=>{
-    const {bc,bpp,per}=billGroupLines(gp);
-    L.push(`${gp.name||'未命名'} 用球：${gp.ballType||'—'} ${gp.ballUsed}/个 总${gp.people}人${gp.attend!=gp.people?` 实到${gp.attend}人`:''}${gp.orgCount>0?`（组织者${gp.orgCount}人参与）`:''}`);
+    const {rev,bpp,per}=billGroupLines(gp);
+    const N=num(gp.ballUsed),K=num(gp.extraBalls),P=num(gp.ballPrice)||num(gp.ballUnit);
+    L.push(`${gp.name||'未命名'} 用球：${gp.ballType||'—'} ${P.toFixed(2)}/个 总${gp.people}人${gp.attend!=gp.people?` 实到${gp.attend}人`:''}${gp.orgCount>0?`（组织者${gp.orgCount}人参与）`:''}`);
     L.push(`场地费 ${fmt(gp.venueCost)}`);
-    L.push(`球费 ${bpp.toFixed(2)} × ${gp.attend} = ${fmt(r2(bpp*gp.attend))}`);
+    L.push(`球费 ${N+K} × ${P.toFixed(2)} = ${fmt(rev)}${K>0?`（含额外加球${K}个）`:''}`);
     L.push(`人均应付 ${per.toFixed(2)}（报名费${num(gp.price).toFixed(2)}+球费${bpp.toFixed(2)}）`);
   });
   if(num(g.recycle)>0)L.push(`旧球回收 ${num(g.recycle)}个 × ¥${num(g.recycleUnit).toFixed(2)} = ${fmt(g.recycleIncome)}（已计入收入）`);
@@ -938,7 +978,7 @@ async function doPull(){
 // 初始化
 addGroup();calcGame();renderGame();checkBackupReminder();
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='127.0.0.1'||location.hostname==='localhost')){navigator.serviceWorker.register('sw.js').catch(()=>{})}
-if(games.length>0){const l=games[0];if(l.groups&&l.groups[0]){const g=l.groups[0];if(g.name)document.querySelector('.gp-name').value=g.name;if(g.ballUnit)document.querySelector('.gp-ballunit').value=g.ballUnit;if(g.price)document.querySelector('.gp-price').value=g.price;calcGame()}}
+if(games.length>0){const l=games[0];if(l.groups&&l.groups[0]){const g=l.groups[0];if(g.name)document.querySelector('.gp-name').value=g.name;if(g.ballUnit)document.querySelector('.gp-ballunit').value=g.ballUnit;const bp0=g.ballPrice!=null?g.ballPrice:getBallPrice(g.ballType);if(bp0)document.querySelector('.gp-unitprice').value=bp0;if(g.price)document.querySelector('.gp-price').value=g.price;calcGame()}}
 </script>
 </body>
 </html>
