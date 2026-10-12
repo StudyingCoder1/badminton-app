@@ -94,6 +94,8 @@ tbody tr:hover{background:var(--green-bg)}
 .group-detail{font-size:12px;color:var(--t2);line-height:2}
 .group-detail .gp-tag{display:inline-block;background:var(--blue-bg);color:var(--blue-dark);padding:2px 8px;border-radius:5px;margin:2px 3px;font-size:11px;font-weight:500}
 .group-detail .org-tag{background:var(--purple-bg);color:var(--purple)}
+td .gp-tag{display:inline-block;background:var(--blue-bg);color:var(--blue-dark);padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+td .org-tag{background:var(--purple-bg);color:var(--purple)}
 .fund-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border-radius:var(--radius);padding:12px 18px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px}
 .fund-bar label{font-size:13px;font-weight:700;white-space:nowrap}
 .fund-bar input{width:140px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none}
@@ -218,8 +220,8 @@ th,td{padding:7px 6px;font-size:12px}
   <div class="form-box"><h2>➕ 添加采购记录</h2>
     <div class="form-grid">
       <div class="fg"><label>日期 *</label><input type="date" id="iDate"></div>
-      <div class="fg"><label>采购渠道</label><input type="text" id="iChannel" placeholder="淘宝/实体店"></div>
-      <div class="fg"><label>球品牌型号</label><input type="text" id="iBrand" placeholder="亚狮龙7号"></div>
+      <div class="fg"><label>采购渠道</label><select id="iChannel" onchange="onListChange(this,'bm_channels','采购渠道')"></select></div>
+      <div class="fg"><label>球品牌型号</label><select id="iBrand" onchange="onListChange(this,'bm_brands','球品牌')"></select></div>
       <div class="fg"><label>采购桶数 *</label><input type="number" id="iBk" placeholder="5" min="0" oninput="calcInv()"></div>
       <div class="fg"><label>单桶价格(元) *</label><input type="number" id="iPrice" placeholder="150" step="0.01" min="0" oninput="calcInv()"></div>
       <div class="fg"><label>每桶球数(只)</label><input type="number" id="iBpb" placeholder="12" min="1" value="12" oninput="calcInv()"></div>
@@ -284,6 +286,13 @@ th,td{padding:7px 6px;font-size:12px}
   <div class="chart-box"><h2>📊 月度盈亏汇总</h2><div class="chart-wrap" style="height:240px"><canvas id="monthChart"></canvas></div></div>
 </div>
 
+<!-- 新增列表项弹窗（采购渠道/球品牌） -->
+<div class="modal-overlay" id="listModal"><div class="modal" style="max-width:360px">
+  <h3 id="listTitle">➕ 新增</h3>
+  <div class="fg"><label>名称 *</label><input type="text" id="listInput" placeholder="输入名称" maxlength="20" onkeydown="if(event.key==='Enter')addListConfirm()"></div>
+  <div class="form-actions"><button class="btn" onclick="closeListModal()">取消</button><button class="btn btn-primary" onclick="addListConfirm()">确定</button></div>
+</div></div>
+
 <!-- 新增场地类型弹窗 -->
 <div class="modal-overlay" id="courtTypeModal"><div class="modal" style="max-width:360px">
   <h3>➕ 新增场地类型</h3>
@@ -339,6 +348,11 @@ let ballPrices=(()=>{try{const v=JSON.parse(localStorage.getItem(SK_BP)||'{}');r
 if(ballPrices['红超']===undefined)ballPrices['红超']=18;
 if(ballPrices['橙超']===undefined)ballPrices['橙超']=8;
 if(ballPrices['华美F6']===undefined)ballPrices['华美F6']=8;
+const SK_CH='bm_channels',SK_BD='bm_brands';
+let channels=(()=>{try{const v=JSON.parse(localStorage.getItem(SK_CH)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}})();
+if(channels.length===0)channels=['拼多多','淘宝','京东','阿里巴巴'];
+let ballBrands=(()=>{try{const v=JSON.parse(localStorage.getItem(SK_BD)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}})();
+if(ballBrands.length===0)ballBrands=['橙超','红超','金红超'];
 let games=JSON.parse(localStorage.getItem(SK_G)||'[]');
 let courtTypes=(()=>{try{const v=JSON.parse(localStorage.getItem(SK_CT)||localStorage.getItem('bm_venues')||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}})();
 if(courtTypes.length===0&&games.length===0)courtTypes=['萌新养生场','微微对抗场','3+自由场'];
@@ -491,6 +505,36 @@ function refreshCourtTypeOptions(){
     s.innerHTML=getCourtTypeOptions(s.value==='__ADD__'?(s.dataset.prev||''):s.value);
   });
 }
+// 采购渠道 / 球品牌下拉：预置 + 历史记录聚合，支持新增
+function getChannelNames(){const set=new Set(channels);invs.forEach(i=>{if(i.channel)set.add(i.channel)});return [...set]}
+function getBallBrandNames(){const set=new Set(ballBrands);invs.forEach(i=>{if(i.brand)set.add(i.brand)});games.forEach(g=>normGroups(g).forEach(gp=>{if(gp.ballType)set.add(gp.ballType)}));return [...set]}
+function getListOptions(names,sel){let h='<option value="">请选择</option>';names.forEach(n=>{h+=`<option value="${esc(n)}"${n===sel?' selected':''}>${esc(n)}</option>`});return h+`<option value="__ADD__">➕ 新增...</option>`}
+function setListValue(id,val,names){const s=document.getElementById(id);if(!s)return;const ns=[...names];if(val&&!ns.includes(val))ns.unshift(val);s.innerHTML=getListOptions(ns,val);s.dataset.prev=val||''}
+let addListTarget=null;
+function onListChange(sel,listKey,title){
+  if(sel.value!=='__ADD__'){sel.dataset.prev=sel.value;return}
+  sel.value=sel.dataset.prev||'';
+  addListTarget={sel,listKey,title};
+  document.getElementById('listTitle').textContent='➕ 新增'+title;
+  document.getElementById('listInput').value='';
+  document.getElementById('listModal').classList.add('show');
+  setTimeout(()=>document.getElementById('listInput').focus(),50);
+}
+function closeListModal(){document.getElementById('listModal').classList.remove('show');addListTarget=null}
+function addListConfirm(){
+  const name=document.getElementById('listInput').value.trim();
+  if(!name){alert('请输入名称');return}
+  const t=addListTarget;if(!t)return;
+  const arr=t.listKey==='bm_channels'?channels:ballBrands;
+  if(!arr.includes(name)){arr.push(name);localStorage.setItem(t.listKey,JSON.stringify(arr))}
+  refreshInvListOptions();
+  t.sel.value=name;
+  closeListModal();
+}
+function refreshInvListOptions(){
+  setListValue('iChannel',document.getElementById('iChannel').value||'',getChannelNames());
+  setListValue('iBrand',document.getElementById('iBrand').value||'',getBallBrandNames());
+}
 // 唯一的分组计算入口：表单实时计算、保存、账单全都走这里，改公式只改这一处
 // 计费口径：球费按定价收，成本按库存加权采购价，差价即利润；额外加球按定价计收入不耗库存
 function calcGroupCore(g){
@@ -621,7 +665,8 @@ function renderGame(){
     empty.style.display='none';
     body.innerHTML=shown.map(g=>{
       const cls=g.profit>=0?'pos':'neg';const groups=normGroups(g);
-      const detail=groups.map(gp=>`<span class="gp-tag${gp.orgCount>0?' org-tag':''}">${esc(gp.name||'未命名')} 报${gp.people}${gp.attend!=gp.people?'/到'+gp.attend:''}${gp.orgCount>0?'(组'+gp.orgCount+')':''}${num(gp.extraBalls)>0?'+球'+num(gp.extraBalls):''}</span>`).join(' ');
+      const first=groups[0];
+      const detail=`<span class="gp-tag${first.orgCount>0?' org-tag':''}" title="${esc(groups.map(gp=>gp.name||'未命名').join('、'))}｜报名${first.people}${first.attend!=first.people?' / 实到'+first.attend:''}${first.orgCount>0?' / 组织者'+first.orgCount+'人':''}${num(first.extraBalls)>0?' / 加球'+num(first.extraBalls):''}，点击📢账单看明细">${esc(first.name||'未命名')}</span>`;
       return `<tr>
         <td><span style="cursor:pointer;color:var(--blue);font-weight:600" onclick="toggleDetail(${g.id})">${g.date} ▸</span></td>
         <td style="text-align:left">${esc(g.platform||'-')}</td><td>${esc(g.duration||'-')}</td>
@@ -661,12 +706,13 @@ function renderGameChart(){
 
 // ===== 库存台账 =====
 document.getElementById('iDate').valueAsDate=new Date();
+setListValue('iChannel','',getChannelNames());setListValue('iBrand','',getBallBrandNames());
 function calcInv(){const bk=num(document.getElementById('iBk').value),p=num(document.getElementById('iPrice').value),bpb=num(document.getElementById('iBpb').value)||12;document.getElementById('iAmount').value=fmt(bk*p);document.getElementById('iBalls').value=bk*bpb+'只'}
-function resetInvForm(){editingInvId=null;document.getElementById('saveInvBtn').textContent='保存记录';['iChannel','iBrand','iBk','iPrice'].forEach(id=>document.getElementById(id).value='');document.getElementById('iBpb').value=12;document.getElementById('iDate').valueAsDate=new Date();calcInv()}
+function resetInvForm(){editingInvId=null;document.getElementById('saveInvBtn').textContent='保存记录';['iBk','iPrice'].forEach(id=>document.getElementById(id).value='');document.getElementById('iBpb').value=12;setListValue('iChannel','',getChannelNames());setListValue('iBrand','',getBallBrandNames());document.getElementById('iDate').valueAsDate=new Date();calcInv()}
 function saveInv(){const d=document.getElementById('iDate').value,bk=num(document.getElementById('iBk').value),p=num(document.getElementById('iPrice').value),bpb=num(document.getElementById('iBpb').value)||12;if(!d){alert('请选择日期');return}if(!bk||!p){alert('请填写桶数和单价');return}if(editingInvId){invs=invs.filter(i=>i.id!==editingInvId);editingInvId=null}invs.push({id:uid(),date:d,channel:document.getElementById('iChannel').value.trim(),brand:document.getElementById('iBrand').value.trim(),buckets:bk,pricePerBucket:p,ballsPerBucket:bpb,totalAmount:r2(bk*p),totalBalls:bk*bpb});invs.sort((a,b)=>b.date.localeCompare(a.date));saveData();resetInvForm();renderInv();showToast('✅ 已保存采购记录')}
 function editInv(id){
   const i=invs.find(x=>x.id===id);if(!i)return;editingInvId=id;
-  document.getElementById('iDate').value=i.date;document.getElementById('iChannel').value=i.channel||'';document.getElementById('iBrand').value=i.brand||'';document.getElementById('iBk').value=i.buckets;document.getElementById('iPrice').value=i.pricePerBucket;document.getElementById('iBpb').value=i.ballsPerBucket||12;calcInv();
+  document.getElementById('iDate').value=i.date;setListValue('iChannel',i.channel||'',getChannelNames());setListValue('iBrand',i.brand||'',getBallBrandNames());document.getElementById('iBk').value=i.buckets;document.getElementById('iPrice').value=i.pricePerBucket;document.getElementById('iBpb').value=i.ballsPerBucket||12;calcInv();
   document.querySelector('#panel1 .form-box').scrollIntoView({behavior:'smooth'});document.getElementById('saveInvBtn').textContent='✏️ 保存修改';
 }
 function delInv(id){
@@ -678,6 +724,7 @@ function delInv(id){
 function renderInv(){
   let tc=0,tb=0,tbl=0;invs.forEach(i=>{tc+=i.totalAmount;tb+=i.buckets;tbl+=i.totalBalls});
   refreshBallTypeOptions();
+  refreshInvListOptions();
   let consumed=0;games.forEach(g=>normGroups(g).forEach(gp=>consumed+=num(gp.ballUsed)));
   const stock=tbl-consumed;
   document.getElementById('iTotalCost').textContent=fmt(tc);document.getElementById('iBuckets').textContent=tb;document.getElementById('iInbound').textContent=tbl+'只';document.getElementById('iConsumed').textContent=consumed+'只';

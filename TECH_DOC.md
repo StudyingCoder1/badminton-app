@@ -49,6 +49,8 @@
 | `bm_github_config` | `{owner,repo,branch,path,token}` 同步配置，token 明文本地存储 |
 | `bm_court_types` | 场地类型列表（预置：萌新养生场/微微对抗场/3+自由场） |
 | `bm_ball_prices` | `{品牌: 定价}`（预置：红超18/橙超8/华美F6 8） |
+| `bm_channels` | 采购渠道列表（预置：拼多多/淘宝/京东/阿里巴巴，支持下拉新增） |
+| `bm_brands` | 球品牌列表（预置：橙超/红超/金红超，支持下拉新增） |
 | `bm_last_backup` / `bm_backup_snooze` / `bm_first_use` | 备份提醒用的时间戳 |
 | `bm_venues` | ⚠️ 旧版键，读取时自动迁移到 bm_court_types |
 
@@ -113,6 +115,7 @@
 | `getBallTypes()` | 库存按品牌聚合 → 加权平均成本 |
 | `getBallPrice(brand)` / `onUnitPriceInput` | 品牌定价读取与持久化（bm_ball_prices） |
 | `getCourtTypeNames/Options` / `onCourtTypeChange` / 弹窗 `courtTypeModal` | 场地类型下拉+新增 |
+| `getChannelNames` / `getBallBrandNames` / `onListChange` / 弹窗 `listModal` | 采购渠道/球品牌下拉+新增（通用列表项机制，选项 = 预置∪历史记录） |
 | `copyLastGame()` | 复制上场配置（结构保留、数值清零） |
 | `addBallTube(btn)` | ➕1筒 快捷键（按该品牌 ballsPerBucket 累加） |
 | `showToast(msg,undoFn)` / `runUndo()` | 底部 toast；删除撤销（6 秒） |
