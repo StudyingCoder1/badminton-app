@@ -6,6 +6,10 @@
 <title>🏸 羽毛球局收支管理</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏸</text></svg>">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#10b981">
 <style>
 :root{--bg:#eef2f7;--card:#fff;--border:#e2e8f0;--border-light:#f1f5f9;--t1:#0f172a;--t2:#64748b;--t3:#94a3b8;--green:#10b981;--green-bg:#ecfdf5;--green-dark:#059669;--red:#ef4444;--red-bg:#fef2f2;--blue:#3b82f6;--blue-bg:#eff6ff;--blue-dark:#2563eb;--orange:#f59e0b;--orange-bg:#fffbeb;--purple:#8b5cf6;--purple-bg:#f5f3ff;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);--shadow-hover:0 4px 16px rgba(0,0,0,.1);--radius:14px;--radius-sm:10px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -42,6 +46,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Micr
 .fg label{font-size:12px;color:var(--t2);font-weight:500}
 .fg input{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;background:var(--card);width:100%}
 .fg input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+.fg select{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;background:var(--card);width:100%;font-family:inherit;cursor:pointer}
+.fg select:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
 .fg input[readonly]{background:#f8fafc;color:var(--t2);border-color:var(--border-light)}
 .fg input.auto{background:var(--blue-bg);font-weight:700;color:var(--blue-dark);border-color:#bfdbfe}
 .form-divider{font-size:12px;font-weight:700;color:var(--t1);margin:14px 0 8px;padding:6px 12px;background:var(--border-light);border-radius:7px;display:flex;justify-content:space-between;align-items:center}
@@ -75,6 +81,7 @@ tbody tr:hover{background:var(--green-bg)}
 .group-row>button{flex:0 0 auto;align-self:flex-end;margin-bottom:1px}
 .group-row .fg label{font-size:10px}
 .group-row .fg input{padding:6px 9px;font-size:13px;width:100%}
+.group-row .fg select{padding:6px 9px;font-size:13px}
 .group-row .gp-profit{font-weight:700}
 .group-add{margin:4px 0 8px}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center}
@@ -92,6 +99,43 @@ tbody tr:hover{background:var(--green-bg)}
 .fund-bar input{width:140px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none}
 .fund-bar input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
 .fund-bar span{font-size:12px;color:var(--t2)}
+.bill-btn{background:var(--green-bg);border:1px solid #a7f3d0;color:var(--green-dark);cursor:pointer;font-size:12px;padding:4px 10px;border-radius:6px;transition:all .15s;font-weight:600;white-space:nowrap;margin-right:4px}.bill-btn:hover{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 2px 6px rgba(16,185,129,.3)}
+.bill-card{background:#fff;padding:6px 2px;font-size:13px;line-height:1.9;color:var(--t1)}
+.bill-card h4{text-align:center;font-size:16px;font-weight:800;margin-bottom:2px}
+.bill-card .bill-date{text-align:center;color:var(--t2);font-size:12px;margin-bottom:10px}
+.bill-card .bill-line{display:flex;justify-content:space-between;gap:12px;padding:1px 0}
+.bill-card .bill-line span:first-child{color:var(--t2)}
+.bill-card .bill-line span:last-child{font-weight:600}
+.bill-card .bill-total{display:flex;justify-content:space-between;border-top:1px dashed #cbd5e1;margin-top:6px;padding-top:6px;font-weight:800}
+.bill-card .bill-note{margin-top:12px;background:var(--green-bg);border-radius:8px;padding:8px 12px;color:var(--green-dark);font-size:12px;text-align:center}
+.bill-actions{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+@media(max-width:640px){
+body{padding:10px}
+.header h1{font-size:18px}
+.tab{padding:11px 6px;font-size:12px}
+.form-grid{grid-template-columns:repeat(2,1fr)}
+.group-row{padding:10px}
+.group-row>.fg{flex:1 1 42%;min-width:42%}
+.btn{padding:10px 14px;min-height:40px}
+th,td{padding:7px 6px;font-size:12px}
+.table-box,.form-box,.chart-box{padding:14px}
+.s-value{font-size:20px}
+.modal{padding:18px;max-height:85vh;overflow-y:auto}
+.form-actions .btn{flex:1}
+.bill-actions .btn{flex:1}
+}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-90px);background:#1e293b;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:2000;transition:transform .25s ease;max-width:90vw;display:flex;align-items:center;gap:12px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast .toast-undo{background:var(--green);color:#fff;border:none;padding:5px 14px;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px;white-space:nowrap}
+.toast .toast-undo:hover{background:var(--green-dark)}
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:var(--t2)}
+.filter-bar select{padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);font-family:inherit;cursor:pointer;outline:none}
+.chart-offline{position:relative}
+.chart-offline::after{content:'📉 图表组件需联网加载，联网后刷新即可';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:13px;background:#f8fafc;border-radius:8px}
+@media(max-width:640px){
+#gameTable th:nth-child(2),#gameTable td:nth-child(2),#gameTable th:nth-child(3),#gameTable td:nth-child(3),#gameTable th:nth-child(7),#gameTable td:nth-child(7),#gameTable th:nth-child(8),#gameTable td:nth-child(8),#gameTable th:nth-child(9),#gameTable td:nth-child(9){display:none}
+.form-actions{position:sticky;bottom:8px;background:var(--card);margin-top:12px;padding:10px 2px;border-radius:10px;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:5}
+}
 </style>
 </head>
 <body>
@@ -107,6 +151,10 @@ tbody tr:hover{background:var(--green-bg)}
     <button class="btn btn-danger" onclick="clearAll()">清空</button>
   </div>
 </div>
+<div class="note" id="backupBar" style="display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+  <span>💾 已有记账数据且较久未备份，建议导出 Excel 或同步 GitHub，避免浏览器清缓存导致数据丢失。</span>
+  <span style="white-space:nowrap"><button class="btn btn-sm btn-primary" style="margin-right:6px" onclick="exportExcel()">📤 立即导出</button><button class="btn btn-sm" onclick="snoozeBackup()">稍后提醒</button></span>
+</div>
 <div class="tabs">
   <div class="tab active" onclick="switchTab(0)">📊 单场收支</div>
   <div class="tab" onclick="switchTab(1)">🏸 库存台账</div>
@@ -120,7 +168,7 @@ tbody tr:hover{background:var(--green-bg)}
     <div class="s-card sc-blue"><div class="s-label">💰 累计总收入</div><div class="s-value blue" id="sIncome">¥0</div><div class="s-sub">已扣除组织者自费</div></div>
     <div class="s-card sc-orange"><div class="s-label">📉 累计总成本</div><div class="s-value orange" id="sCost">¥0</div><div class="s-sub">场地费+球费</div></div>
     <div class="s-card sc-green"><div class="s-label">📊 累计盈亏</div><div class="s-value pos" id="sProfit">¥0</div><div class="s-sub" id="sProfitRate">利润率 0%</div></div>
-    <div class="s-card sc-purple"><div class="s-label">♻️ 旧球回收</div><div class="s-value purple" id="sRecycle">¥0</div><div class="s-sub" id="sRecycleBuckets">0桶</div></div>
+    <div class="s-card sc-purple"><div class="s-label">♻️ 旧球回收</div><div class="s-value purple" id="sRecycle">¥0</div><div class="s-sub" id="sRecycleBuckets">0个</div></div>
     <div class="s-card sc-slate"><div class="s-label">🏸 活动场次</div><div class="s-value" id="sCount">0</div><div class="s-sub" id="sAvgProfit">场均 ¥0</div></div>
   </div>
   <div class="form-box">
@@ -132,7 +180,7 @@ tbody tr:hover{background:var(--green-bg)}
     </div>
     <div class="form-divider"><span>🏟️ 场地分组（每个场地独立计费）</span><span class="fd-hint">组织者参与打球时填参与人数，自动扣费</span></div>
     <div id="groupList"></div>
-    <button class="btn btn-sm btn-blue group-add" onclick="addGroup()">+ 添加场地分组</button>
+    <button class="btn btn-sm btn-blue group-add" onclick="addGroup()">+ 添加场地分组</button><button class="btn btn-sm group-add" style="margin-left:6px" onclick="copyLastGame()">📋 复制上场</button>
     <div class="form-divider"><span>♻️ 旧球回收</span></div>
     <div class="form-grid">
       <div class="fg"><label>回收个数</label><input type="number" id="gRecycle" placeholder="0" min="0" oninput="calcGame()"></div>
@@ -147,11 +195,12 @@ tbody tr:hover{background:var(--green-bg)}
       <div class="fg"><label>整场总收入</label><input type="text" id="gTotalIncome" readonly class="auto"></div>
       <div class="fg"><label>整场真实盈亏</label><input type="text" id="gProfit" readonly class="auto" style="font-weight:800;font-size:15px"></div>
     </div>
-    <div class="form-actions"><button class="btn" onclick="resetGameForm()">重置</button><button class="btn btn-primary" onclick="saveGame()">保存记录</button></div>
+    <div class="form-actions"><button class="btn" onclick="resetGameForm()">重置</button><button class="btn btn-primary" id="saveGameBtn" onclick="saveGame()">保存记录</button></div>
   </div>
   <div class="table-box">
     <h2>📋 单场收支明细 <span style="font-size:12px;font-weight:400;color:var(--t3)">（点击日期展开分组详情）</span></h2>
-    <table><thead><tr><th>日期</th><th>平台</th><th>时长</th><th>场地明细</th><th>报名</th><th>组织者</th><th>总成本</th><th>总收入</th><th>旧球回收</th><th>真实盈亏</th><th>操作</th></tr></thead><tbody id="gameBody"></tbody></table>
+    <div class="filter-bar"><span>🗓 月份筛选</span><select id="gameMonthFilter" onchange="renderGame()"></select></div>
+    <table id="gameTable"><thead><tr><th>日期</th><th>平台</th><th>时长</th><th>场地明细</th><th>报名</th><th>组织者</th><th>总成本</th><th>总收入</th><th>旧球回收</th><th>真实盈亏</th><th>操作</th></tr></thead><tbody id="gameBody"></tbody></table>
     <div class="empty" id="gameEmpty">还没有记录，在上方添加第一场 👆</div>
   </div>
   <div class="chart-box"><h2>📈 各场盈亏趋势</h2><div class="chart-wrap"><canvas id="gameChart"></canvas></div></div>
@@ -173,10 +222,11 @@ tbody tr:hover{background:var(--green-bg)}
       <div class="fg"><label>球品牌型号</label><input type="text" id="iBrand" placeholder="亚狮龙7号"></div>
       <div class="fg"><label>采购桶数 *</label><input type="number" id="iBk" placeholder="5" min="0" oninput="calcInv()"></div>
       <div class="fg"><label>单桶价格(元) *</label><input type="number" id="iPrice" placeholder="150" step="0.01" min="0" oninput="calcInv()"></div>
+      <div class="fg"><label>每桶球数(只)</label><input type="number" id="iBpb" placeholder="12" min="1" value="12" oninput="calcInv()"></div>
       <div class="fg"><label>采购总金额(自动)</label><input type="text" id="iAmount" readonly class="auto"></div>
       <div class="fg"><label>入库总球数(自动)</label><input type="text" id="iBalls" readonly class="auto"></div>
     </div>
-    <div class="form-actions"><button class="btn" onclick="resetInvForm()">重置</button><button class="btn btn-primary" onclick="saveInv()">保存记录</button></div>
+    <div class="form-actions"><button class="btn" onclick="resetInvForm()">重置</button><button class="btn btn-primary" id="saveInvBtn" onclick="saveInv()">保存记录</button></div>
   </div>
   <div class="table-box"><h2>📋 库存采购明细</h2>
     <table><thead><tr><th>日期</th><th>渠道</th><th>品牌型号</th><th>桶数</th><th>单桶价</th><th>采购金额</th><th>入库球数</th><th>操作</th></tr></thead><tbody id="invBody"></tbody></table>
@@ -202,7 +252,7 @@ tbody tr:hover{background:var(--green-bg)}
       <div class="fg"><label>单个价格(元) *</label><input type="number" id="eUnit" placeholder="24" step="0.01" min="0" oninput="calcExp()"></div>
       <div class="fg"><label>实付总金额(自动)</label><input type="text" id="eAmount" readonly class="auto"></div>
     </div>
-    <div class="form-actions"><button class="btn" onclick="resetExpForm()">重置</button><button class="btn btn-primary" onclick="saveExp()">保存记录</button></div>
+    <div class="form-actions"><button class="btn" onclick="resetExpForm()">重置</button><button class="btn btn-primary" id="saveExpBtn" onclick="saveExp()">保存记录</button></div>
   </div>
   <div class="table-box"><h2>📋 资金支出明细</h2>
     <table><thead><tr><th>日期</th><th>购物渠道</th><th>商品名</th><th>数量</th><th>单个价格</th><th>实付金额</th><th>操作</th></tr></thead><tbody id="expBody"></tbody></table>
@@ -234,6 +284,25 @@ tbody tr:hover{background:var(--green-bg)}
   <div class="chart-box"><h2>📊 月度盈亏汇总</h2><div class="chart-wrap" style="height:240px"><canvas id="monthChart"></canvas></div></div>
 </div>
 
+<!-- 新增场地类型弹窗 -->
+<div class="modal-overlay" id="courtTypeModal"><div class="modal" style="max-width:360px">
+  <h3>➕ 新增场地类型</h3>
+  <div class="fg"><label>场地类型名称 *</label><input type="text" id="courtTypeInput" placeholder="如：萌新养生场 / 微微对抗场 / 3+自由场" maxlength="30" onkeydown="if(event.key==='Enter')addCourtTypeConfirm()"></div>
+  <div class="form-actions"><button class="btn" onclick="closeCourtTypeModal()">取消</button><button class="btn btn-primary" onclick="addCourtTypeConfirm()">确定</button></div>
+</div></div>
+
+<!-- 公示账单弹窗 -->
+<div class="modal-overlay" id="billModal"><div class="modal" style="max-width:460px;max-height:85vh;overflow-y:auto">
+  <h3>📢 公示账单</h3>
+  <div class="bill-card" id="billCard"></div>
+  <div class="hint" style="font-size:12px;color:var(--t2);margin-top:10px;background:var(--blue-bg);padding:8px 10px;border-radius:8px;line-height:1.6">🔒 账单只含汇总数据，不含个人付款明细，可放心分享到群</div>
+  <div class="bill-actions">
+    <button class="btn btn-primary" onclick="copyBill()">📋 复制文本</button>
+    <button class="btn btn-blue" onclick="exportBillImage()">🖼 保存图片</button>
+    <button class="btn" onclick="closeBillModal()">关闭</button>
+  </div>
+</div></div>
+
 <!-- GitHub弹窗 -->
 <div class="modal-overlay" id="ghModal"><div class="modal">
   <h3>☁️ GitHub 同步配置</h3>
@@ -261,22 +330,87 @@ tbody tr:hover{background:var(--green-bg)}
   <div class="form-actions"><button class="btn btn-primary" onclick="closeTipsModal()">明白了</button></div>
 </div></div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-const SK_G='bm_games',SK_I='bm_inventory',SK_E='bm_expenses',SK_F='bm_init_fund',SK_GH='bm_github_config';
-const RECYCLE_PRICE=40;
+const SK_G='bm_games',SK_I='bm_inventory',SK_E='bm_expenses',SK_F='bm_init_fund',SK_GH='bm_github_config',SK_CT='bm_court_types',SK_LB='bm_last_backup',SK_BS='bm_backup_snooze',SK_FU='bm_first_use';
+if(!localStorage.getItem(SK_FU))localStorage.setItem(SK_FU,String(Date.now()));
 let games=JSON.parse(localStorage.getItem(SK_G)||'[]');
+let courtTypes=(()=>{try{const v=JSON.parse(localStorage.getItem(SK_CT)||localStorage.getItem('bm_venues')||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}})();
+if(courtTypes.length===0&&games.length===0)courtTypes=['萌新养生场','微微对抗场','3+自由场'];
 let invs=JSON.parse(localStorage.getItem(SK_I)||'[]');
 let expenses=JSON.parse(localStorage.getItem(SK_E)||'[]');
 let initFund=num(localStorage.getItem(SK_F)||0);
 let charts={};
 let editingGameId=null,editingInvId=null,editingExpId=null;
-function fmt(v){return '¥'+(+(v||0)).toFixed(2)}
-function num(v){return +(v||0)}
-function saveData(){localStorage.setItem(SK_G,JSON.stringify(games));localStorage.setItem(SK_I,JSON.stringify(invs));localStorage.setItem(SK_E,JSON.stringify(expenses))}
+function fmt(v){return '¥'+((+(v||0))||0).toFixed(2)}
+function num(v){if(typeof v==='number')return isFinite(v)?v:0;const n=parseFloat(String(v==null?'':v).replace(/[¥,，\s]/g,''));return isFinite(n)?n:0}
+function r2(v){return Math.round(num(v)*100)/100}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function uid(){return Date.now()*1000+Math.floor(Math.random()*1000)}
+function dateNorm(v){if(typeof v==='number'&&v>20000&&v<80000)return new Date(Math.round((v-25569)*86400000)).toISOString().slice(0,10);return String(v==null?'':v).slice(0,10)}
+function saveData(){localStorage.setItem(SK_G,JSON.stringify(games));localStorage.setItem(SK_I,JSON.stringify(invs));localStorage.setItem(SK_E,JSON.stringify(expenses));checkBackupReminder()}
+// ===== Toast 提示与备份提醒 =====
+let toastTimer=null,pendingUndo=null;
+function showToast(msg,undoFn){
+  const t=document.getElementById('toast');
+  t.innerHTML=esc(msg)+(undoFn?'<button class="toast-undo" onclick="runUndo()">撤销</button>':'');
+  pendingUndo=undoFn||null;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.classList.remove('show');pendingUndo=null},undoFn?6000:2200);
+}
+function runUndo(){const fn=pendingUndo;pendingUndo=null;clearTimeout(toastTimer);document.getElementById('toast').classList.remove('show');if(fn)fn()}
+function snoozeBackup(){localStorage.setItem(SK_BS,String(Date.now()));checkBackupReminder()}
+function markBackedUp(){localStorage.setItem(SK_LB,String(Date.now()));checkBackupReminder()}
+function checkBackupReminder(){
+  const bar=document.getElementById('backupBar');if(!bar)return;
+  const hasData=games.length>0||invs.length>0||expenses.length>0;
+  const last=+(localStorage.getItem(SK_LB)||0),snooze=+(localStorage.getItem(SK_BS)||0),first=+(localStorage.getItem(SK_FU)||Date.now());
+  const due=hasData&&Date.now()-Math.max(last,snooze)>3*86400000&&(last>0||Date.now()-first>3*86400000);
+  bar.style.display=due?'flex':'none';
+}
+// ===== 复制上场 / 快捷加一筒 =====
+function copyLastGame(){
+  if(games.length===0){alert('还没有历史记录，无法复制');return}
+  const last=games[0];
+  document.getElementById('gPlatform').value=last.platform||'';
+  document.getElementById('gDuration').value=last.duration||'';
+  document.getElementById('gRecycleUnit').value=last.recycleUnit||3;
+  document.getElementById('groupList').innerHTML='';
+  normGroups(last).forEach(gp=>addGroup({name:gp.name,ballType:gp.ballType,ballUnit:gp.ballUnit,price:gp.price,orgCount:gp.orgCount||0}));
+  document.getElementById('gDate').valueAsDate=new Date();calcGame();
+  showToast('已带入上场配置，填人数和费用即可保存');
+}
+function addBallTube(btn){
+  const row=btn.closest('.group-row');
+  const type=row.querySelector('.gp-balltype').value;
+  const inv=invs.find(i=>i.brand===type);
+  const n=inv&&inv.ballsPerBucket?inv.ballsPerBucket:12;
+  const el=row.querySelector('.gp-ball');
+  el.value=num(el.value)+n;calcGame();
+}
+// Enter 键快捷保存（仅在三个录入表单的输入框内生效）
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const t=e.target;
+  if(!t.matches||!t.matches('input'))return;
+  const panel=t.closest('.tab-panel'),box=t.closest('.form-box');
+  if(!panel||!box)return;
+  if(panel.id==='panel0'){e.preventDefault();saveGame()}
+  else if(panel.id==='panel1'){e.preventDefault();saveInv()}
+  else if(panel.id==='panel2'){e.preventDefault();saveExp()}
+});
 function switchTab(i){
   document.querySelectorAll('.tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
   document.querySelectorAll('.tab-panel').forEach((p,idx)=>p.classList.toggle('active',idx===i));
-  if(i===0)renderGame();if(i===1)renderInv();if(i===2)renderExp();if(i===3)renderAll();
+  if(i===0){refreshBallTypeOptions();renderGame()}if(i===1)renderInv();if(i===2)renderExp();if(i===3)renderAll();
+}
+function refreshBallTypeOptions(){
+  document.querySelectorAll('.group-row').forEach(row=>{
+    const sel=row.querySelector('.gp-balltype');if(!sel)return;
+    sel.innerHTML=getBallOptions(sel.value||undefined);
+  });
 }
 
 // ===== 单场收支 =====
@@ -290,31 +424,92 @@ function getBallOptions(sel){
   const t=getBallTypes();const keys=Object.keys(t);
   if(keys.length===0)return '<option value="">先在库存台账添加采购</option>';
   let h='<option value="">选择球种类</option>';
-  keys.forEach(b=>{const p=t[b].up.toFixed(2);h+=`<option value="${b}" data-price="${p}"${b===sel?' selected':''}>${b} (¥${p}/只)</option>`});
+  keys.forEach(b=>{const p=t[b].up.toFixed(2);h+=`<option value="${esc(b)}" data-price="${p}"${b===sel?' selected':''}>${esc(b)} (¥${p}/只)</option>`});
   return h;
 }
 function onBallTypeChange(sel){
   const row=sel.closest('.group-row');const opt=sel.options[sel.selectedIndex];
-  const p=opt.getAttribute('data-price')||0;
-  row.querySelector('.gp-ballunit').value=p>0?fmt(+p):'';
+  const p=num(opt.getAttribute('data-price'));
+  row.querySelector('.gp-ballunit').value=p>0?p:'';
   calcGame();
+}
+// 场地类型下拉：已保存类型 ∪ 历史记录中出现过的类型，支持即时新增
+function getCourtTypeNames(){
+  const set=new Set(courtTypes);
+  games.forEach(g=>normGroups(g).forEach(gp=>{if(gp.name&&gp.name!=='未命名'&&gp.name!=='默认')set.add(gp.name)}));
+  return [...set];
+}
+function getCourtTypeOptions(sel){
+  const names=getCourtTypeNames();
+  if(sel&&!names.includes(sel))names.unshift(sel);
+  let h='';names.forEach(n=>{h+=`<option value="${esc(n)}"${n===sel?' selected':''}>${esc(n)}</option>`});
+  return h+`<option value="__ADD__">➕ 新增场地类型...</option>`;
+}
+function onCourtTypeChange(sel){
+  if(sel.value!=='__ADD__'){sel.dataset.prev=sel.value;return}
+  sel.value=sel.dataset.prev||'';
+  courtTypeTargetSelect=sel;
+  document.getElementById('courtTypeInput').value='';
+  document.getElementById('courtTypeModal').classList.add('show');
+  setTimeout(()=>document.getElementById('courtTypeInput').focus(),50);
+}
+let courtTypeTargetSelect=null;
+function closeCourtTypeModal(){document.getElementById('courtTypeModal').classList.remove('show');courtTypeTargetSelect=null}
+function addCourtTypeConfirm(){
+  const name=document.getElementById('courtTypeInput').value.trim();
+  if(!name){alert('请输入场地类型名称');return}
+  if(!courtTypes.includes(name)){courtTypes.push(name);localStorage.setItem(SK_CT,JSON.stringify(courtTypes))}
+  refreshCourtTypeOptions();
+  if(courtTypeTargetSelect)courtTypeTargetSelect.value=name;
+  closeCourtTypeModal();
+}
+function refreshCourtTypeOptions(){
+  document.querySelectorAll('.group-row').forEach(row=>{
+    const s=row.querySelector('.gp-name');if(!s)return;
+    s.innerHTML=getCourtTypeOptions(s.value==='__ADD__'?(s.dataset.prev||''):s.value);
+  });
+}
+// 唯一的分组计算入口：表单实时计算、保存、账单全都走这里，改公式只改这一处
+function calcGroupCore(g){
+  const people=num(g.people);
+  const orgCount=Math.min(num(g.orgCount),people);
+  const attend=num(g.attend)||people;
+  const venueCost=num(g.venueCost);
+  const ballUsed=num(g.ballUsed);
+  const extraBalls=num(g.extraBalls);
+  const ballUnit=num(g.ballUnit);
+  const price=num(g.price);
+  const ballCost=r2(ballUsed*ballUnit);
+  const ballPricePerPerson=attend>0?r2(ballCost/attend):0;
+  const orgCost=r2(orgCount*(price+ballPricePerPerson));
+  const groupCost=r2(ballCost+venueCost+orgCost);
+  const groupIncome=r2(price*people+ballPricePerPerson*attend+extraBalls+ballUsed*(ballPricePerPerson-ballUnit));
+  return {name:g.name||'未命名',people,orgCount,attend,venueCost,ballUsed,extraBalls,ballType:g.ballType||'',ballUnit,price,ballCost,ballPricePerPerson,ballChargeTotal:r2(ballPricePerPerson*attend),orgCost,groupCost,groupIncome,groupProfit:r2(groupIncome-groupCost),perPerson:r2(price+ballPricePerPerson)};
+}
+function readRow(row){
+  const q=s=>row.querySelector(s).value;
+  const name=q('.gp-name')==='__ADD__'?'':q('.gp-name').trim();
+  return {name,people:num(q('.gp-people')),orgCount:num(q('.gp-org')),attend:num(q('.gp-attend')),venueCost:num(q('.gp-venue')),ballUsed:num(q('.gp-ball')),extraBalls:num(q('.gp-extra')),ballType:q('.gp-balltype'),ballUnit:num(q('.gp-ballunit')),price:num(q('.gp-price'))};
 }
 document.getElementById('gDate').valueAsDate=new Date();
 function addGroup(data){
   const div=document.createElement('div');div.className='group-row';const d=data||{};
+  const autoUnit=d.ballUnit||(d.ballType?(getBallTypes()[d.ballType]||{}).up||'':'');
   div.innerHTML=`
-    <div class="fg"><label>场地名称</label><input type="text" class="gp-name" placeholder="萌新养生场" value="${d.name||''}"></div>
+    <div class="fg"><label>场地类型</label><select class="gp-name" onchange="onCourtTypeChange(this)">${getCourtTypeOptions(d.name||'')}</select></div>
     <div class="fg"><label>报名人数</label><input type="number" class="gp-people" placeholder="10" min="0" value="${d.people||''}" oninput="calcGame()"></div>
     <div class="fg"><label>组织者参与</label><input type="number" class="gp-org" placeholder="0" min="0" value="${d.orgCount||0}" oninput="calcGame()" style="border-color:#ddd6fe"></div>
     <div class="fg"><label>实到人数</label><input type="number" class="gp-attend" placeholder="10" min="0" value="${d.attend||d.people||''}" oninput="calcGame()" style="border-color:#bfdbfe"></div>
     <div class="fg"><label>场地费(成本)</label><input type="number" class="gp-venue" placeholder="200" step="0.01" min="0" value="${d.venueCost||''}" oninput="calcGame()"></div>
     <div class="fg"><label>球消耗(只)</label><input type="number" class="gp-ball" placeholder="8" min="0" value="${d.ballUsed||''}" oninput="calcGame()"></div>
-    <div class="fg"><label>额外收入</label><input type="number" class="gp-extra" placeholder="0" step="0.01" min="0" value="${d.extraBalls||0}" oninput="calcGame()" style="border-color:#fde68a" title="直接填写额外收入金额"></div>
+    <div class="fg" style="flex:0 0 auto"><label>&nbsp;</label><button class="btn btn-sm" style="white-space:nowrap" onclick="addBallTube(this)" title="快捷加一筒球">➕1筒</button></div>
+    <div class="fg"><label>额外收入(元)</label><input type="number" class="gp-extra" placeholder="0" step="0.01" min="0" value="${d.extraBalls||0}" oninput="calcGame()" style="border-color:#fde68a" title="直接填写额外收入金额"></div>
     <div class="fg"><label>球种类</label><select class="gp-balltype" onchange="onBallTypeChange(this)">${getBallOptions(d.ballType)}</select></div>
-    <div class="fg"><label>球单价(自动)</label><input type="text" class="gp-ballunit" readonly class="auto" value="${d.ballUnit?fmt(d.ballUnit):''}"></div>
+    <div class="fg"><label>球单价(自动)</label><input type="text" class="gp-ballunit auto" readonly value="${autoUnit||''}"></div>
     <div class="fg"><label>人均报名费</label><input type="number" class="gp-price" placeholder="25" step="0.01" min="0" value="${d.price||''}" oninput="calcGame()"></div>
-    <div class="fg"><label>人均球费补收(自动)</label><input type="text" class="gp-ballprice" readonly class="auto"></div>
-    <div class="fg"><label>分组盈亏(自动)</label><input type="text" class="gp-profit" readonly class="auto"></div>
+    <div class="fg"><label>人均球费补收(自动)</label><input type="text" class="gp-ballprice auto" readonly></div>
+    <div class="fg"><label>人均应付(自动)</label><input type="text" class="gp-perperson auto" readonly style="font-weight:700;color:var(--green-dark)"></div>
+    <div class="fg"><label>分组盈亏(自动)</label><input type="text" class="gp-profit auto" readonly></div>
     <button class="btn btn-sm btn-danger" onclick="removeGroup(this)">🗑 删除</button>`;
   document.getElementById('groupList').appendChild(div);calcGame();
 }
@@ -322,46 +517,21 @@ function removeGroup(btn){if(document.querySelectorAll('.group-row').length<=1){
 function readGroups(){
   const groups=[];
   document.querySelectorAll('.group-row').forEach(row=>{
-    const name=row.querySelector('.gp-name').value.trim();
-    const people=num(row.querySelector('.gp-people').value);
-    const orgCount=Math.min(num(row.querySelector('.gp-org').value),people);
-    const attend=num(row.querySelector('.gp-attend').value)||people;
-    const venueCost=num(row.querySelector('.gp-venue').value);
-    const ballUsed=num(row.querySelector('.gp-ball').value);
-    const extraBalls=num(row.querySelector('.gp-extra').value);
-    const ballType=row.querySelector('.gp-balltype').value;
-    const ballUnit=num(row.querySelector('.gp-ballunit').value);
-    const price=num(row.querySelector('.gp-price').value);
-    const ballCost=ballUsed*ballUnit;
-    const ballPricePerPerson=attend>0?ballCost/attend:0;
-    const groupCost=ballCost+venueCost+orgCount*(price+ballPricePerPerson);
-    const groupIncome=price*people+ballPricePerPerson*attend+extraBalls+ballUsed*(ballPricePerPerson-ballUnit);
-    const groupProfit=groupIncome-groupCost;
-    if(name||people||venueCost||ballUsed||price)groups.push({name:name||'未命名',people,orgCount,attend,venueCost,ballUsed,extraBalls,ballType,ballUnit,price,ballCost,ballChargeTotal,ballPricePerPerson,groupCost,groupIncome,groupProfit});
+    const raw=readRow(row);
+    if(raw.name||raw.people||raw.venueCost||raw.ballUsed||raw.price)groups.push(calcGroupCore(raw));
   });
   return groups;
 }
 function calcGame(){
   let tp=0,to=0,tc=0,ti=0;
   document.querySelectorAll('.group-row').forEach(row=>{
-    const people=num(row.querySelector('.gp-people').value);
-    const orgCount=Math.min(num(row.querySelector('.gp-org').value),people);
-    const attend=num(row.querySelector('.gp-attend').value)||people;
-    const venueCost=num(row.querySelector('.gp-venue').value);
-    const ballUsed=num(row.querySelector('.gp-ball').value);
-    const extraBalls=num(row.querySelector('.gp-extra').value);
-    const ballUnit=num(row.querySelector('.gp-ballunit').value);
-    const price=num(row.querySelector('.gp-price').value);
-    const ballCost=ballUsed*ballUnit;
-    const ballPricePerPerson=attend>0?ballCost/attend:0;
-    const groupCost=ballCost+venueCost+orgCount*(price+ballPricePerPerson);
-    const groupIncome=price*people+ballPricePerPerson*attend+extraBalls+ballUsed*(ballPricePerPerson-ballUnit);
-    const groupProfit=groupIncome-groupCost;
-    tp+=people;to+=orgCount;tc+=groupCost;ti+=groupIncome;
-    row.querySelector('.gp-ballprice').value=attend>0?fmt(ballPricePerPerson):'¥0';
-    const pe=row.querySelector('.gp-profit');pe.value=(groupProfit>=0?'+':'')+fmt(groupProfit);pe.style.color=groupProfit>=0?'var(--green)':'var(--red)';
+    const g=calcGroupCore(readRow(row));
+    tp+=g.people;to+=g.orgCount;tc+=g.groupCost;ti+=g.groupIncome;
+    row.querySelector('.gp-ballprice').value=g.attend>0?fmt(g.ballPricePerPerson):'¥0';
+    row.querySelector('.gp-perperson').value='¥'+g.perPerson.toFixed(2);
+    const pe=row.querySelector('.gp-profit');pe.value=(g.groupProfit>=0?'+':'')+fmt(g.groupProfit);pe.style.color=g.groupProfit>=0?'var(--green)':'var(--red)';
   });
-  const recycle=num(document.getElementById('gRecycle').value);const recycleUnit=num(document.getElementById('gRecycleUnit').value);const recycleIncome=recycle*recycleUnit;ti+=recycleIncome;const profit=ti-tc;
+  const recycle=num(document.getElementById('gRecycle').value);const recycleUnit=num(document.getElementById('gRecycleUnit').value);const recycleIncome=r2(recycle*recycleUnit);ti=r2(ti+recycleIncome);const profit=r2(ti-tc);
   document.getElementById('gRecycleIncome').value=fmt(recycleIncome);
   document.getElementById('gTotalPeople').value=tp+'人';
   document.getElementById('gTotalOrg').value=to+'人';
@@ -369,66 +539,77 @@ function calcGame(){
   document.getElementById('gTotalIncome').value=fmt(ti);
   const pe=document.getElementById('gProfit');pe.value=(profit>=0?'+':'')+fmt(profit);pe.style.color=profit>=0?'var(--green)':'var(--red)';
 }
-function resetGameForm(){editingGameId=null;document.querySelector('#panel0 .btn-primary').textContent='保存记录';
+function resetGameForm(){editingGameId=null;document.getElementById('saveGameBtn').textContent='保存记录';
   document.getElementById('gPlatform').value='';document.getElementById('gDuration').value='';document.getElementById('gRecycle').value='';document.getElementById('groupList').innerHTML='';
-  let lt='',lp='';if(games.length>0){const l=games[games.length-1];if(l.groups&&l.groups[0]){lt=l.groups[0].ballType;lp=l.groups[0].price}}
-  addGroup({ballType:lt,price:lp});document.getElementById('gDate').valueAsDate=new Date();calcGame();
+  let ln='',lt='',lp='';if(games.length>0){const l=games[0];if(l.groups&&l.groups[0]){ln=l.groups[0].name||'';lt=l.groups[0].ballType;lp=l.groups[0].price}}
+  addGroup({name:ln,ballType:lt,price:lp});document.getElementById('gDate').valueAsDate=new Date();calcGame();
 }
 function saveGame(){
   const date=document.getElementById('gDate').value;if(!date){alert('请选择日期');return}
-  const groups=readGroups();if(groups.length===0){alert('请至少填写一个场地分组');return}
-  const recycle=num(document.getElementById('gRecycle').value);const recycleUnit=num(document.getElementById('gRecycleUnit').value);const recycleIncome=recycle*recycleUnit;
-  let tc=0,ti=0,tp=0,to=0;groups.forEach(g=>{tc+=g.groupCost;ti+=g.groupIncome;tp+=g.people;to+=g.orgCount});ti+=recycleIncome;
+  const groups=readGroups();if(groups.length===0){alert('请至少填写一个场地分组（名称/人数/费用至少填一项）');return}
+  const recycle=num(document.getElementById('gRecycle').value);const recycleUnit=num(document.getElementById('gRecycleUnit').value);const recycleIncome=r2(recycle*recycleUnit);
+  let tc=0,ti=0,tp=0,to=0;groups.forEach(g=>{tc+=g.groupCost;ti+=g.groupIncome;tp+=g.people;to+=g.orgCount});ti=r2(ti+recycleIncome);tc=r2(tc);
   if(editingGameId){games=games.filter(g=>g.id!==editingGameId);editingGameId=null}
-  games.push({id:Date.now(),date,platform:document.getElementById('gPlatform').value,duration:document.getElementById('gDuration').value,groups,recycle,recycleUnit,recycleIncome,totalCost:tc,totalIncome:ti,totalPeople:tp,totalOrg:to,profit:ti-tc});
+  games.push({id:uid(),date,platform:document.getElementById('gPlatform').value.trim(),duration:document.getElementById('gDuration').value,groups,recycle,recycleUnit,recycleIncome,totalCost:tc,totalIncome:ti,totalPeople:tp,totalOrg:to,profit:r2(ti-tc)});
   games.sort((a,b)=>b.date.localeCompare(a.date));saveData();resetGameForm();renderGame();
+  showToast('✅ 已保存 '+date+' 的收支记录');
 }
 function editGame(id){
   const g=games.find(x=>x.id===id);if(!g)return;editingGameId=id;
   document.getElementById('gDate').value=g.date;document.getElementById('gPlatform').value=g.platform||'';document.getElementById('gDuration').value=g.duration||'';document.getElementById('gRecycle').value=g.recycle||'';document.getElementById('gRecycleUnit').value=g.recycleUnit||3;
   document.getElementById('groupList').innerHTML='';normGroups(g).forEach(gp=>addGroup(gp));calcGame();
-  document.querySelector('#panel0 .form-box').scrollIntoView({behavior:'smooth'});document.querySelector('#panel0 .btn-primary').textContent='✏️ 保存修改';
+  document.querySelector('#panel0 .form-box').scrollIntoView({behavior:'smooth'});document.getElementById('saveGameBtn').textContent='✏️ 保存修改';
 }
-function delGame(id){if(!confirm('删除这条记录？'))return;games=games.filter(g=>g.id!==id);saveData();renderGame()}
+function delGame(id){
+  const idx=games.findIndex(g=>g.id===id);if(idx<0)return;
+  const removed=games.splice(idx,1)[0];
+  saveData();renderGame();
+  showToast('已删除 '+removed.date+' 的记录',()=>{games.splice(Math.min(idx,games.length),0,removed);saveData();renderGame();showToast('已恢复')});
+}
 function normGroups(g){
-  if(g.groups&&g.groups.length>0)return g.groups.map(gp=>({...gp,orgCount:gp.orgCount||0,attend:gp.attend||gp.people||0,extraBalls:gp.extraBalls||0,ballType:gp.ballType||'',ballChargeTotal:gp.ballChargeTotal||((gp.ballUsed||0)+(gp.extraBalls||0))*(gp.ballUnit||0),ballPricePerPerson:gp.ballPricePerPerson||0}));
+  if(g.groups&&g.groups.length>0)return g.groups.map(gp=>({...gp,orgCount:gp.orgCount||0,attend:gp.attend||gp.people||0,extraBalls:gp.extraBalls||0,ballType:gp.ballType||'',ballChargeTotal:gp.ballChargeTotal||r2((gp.ballPricePerPerson||0)*(gp.attend||gp.people||0)),ballPricePerPerson:gp.ballPricePerPerson||0}));
   return [{name:'默认',people:g.people||0,orgCount:0,attend:g.people||0,extraBalls:0,ballType:'',venueCost:g.venueCost||0,ballUsed:g.ballUsed||0,ballUnit:g.ballUnit||0,price:g.price||0,ballCost:g.ballCost||0,ballChargeTotal:g.ballCost||0,ballPricePerPerson:0,groupCost:(g.venueCost||0)+(g.ballCost||0),groupIncome:(g.people||0)*(g.price||0),groupProfit:(g.people||0)*(g.price||0)-((g.venueCost||0)+(g.ballCost||0))}];
 }
 function renderGame(){
+  refreshCourtTypeOptions();
+  // 月份筛选：保留当前选择，表格按月过滤（汇总与图表仍统计全部）
+  const filterSel=document.getElementById('gameMonthFilter');
+  const cur=filterSel.value;
+  const months=[...new Set(games.map(g=>g.date.slice(0,7)))].sort().reverse();
+  filterSel.innerHTML='<option value="">全部（'+games.length+'场）</option>'+months.map(m=>{const n=games.filter(g=>g.date.slice(0,7)===m).length;return `<option value="${m}"${m===cur?' selected':''}>${m}（${n}场）</option>`}).join('');
+  const shown=cur?games.filter(g=>g.date.slice(0,7)===cur):games;
   let income=0,cost=0,profit=0,recycle=0,rb=0;
   games.forEach(g=>{income+=g.totalIncome;cost+=g.totalCost;profit+=g.profit;recycle+=g.recycleIncome;rb+=g.recycle||0});
   document.getElementById('sIncome').textContent=fmt(income);
   document.getElementById('sCost').textContent=fmt(cost);
   const pe=document.getElementById('sProfit');pe.textContent=(profit>=0?'+':'')+fmt(profit);pe.className='s-value '+(profit>=0?'pos':'neg');
   document.getElementById('sProfitRate').textContent='利润率 '+(income>0?(profit/income*100).toFixed(1):0)+'%';
-  document.getElementById('sRecycle').textContent=fmt(recycle);document.getElementById('sRecycleBuckets').textContent=rb+'桶';
+  document.getElementById('sRecycle').textContent=fmt(recycle);document.getElementById('sRecycleBuckets').textContent=rb+'个';
   document.getElementById('sCount').textContent=games.length;
   document.getElementById('sAvgProfit').textContent='场均 '+(profit>=0?'+':'')+fmt(games.length?profit/games.length:0);
   const body=document.getElementById('gameBody'),empty=document.getElementById('gameEmpty');
-  if(games.length===0){body.innerHTML='';empty.style.display='block'}
+  if(shown.length===0){body.innerHTML='';empty.style.display='block'}
   else{
     empty.style.display='none';
-    body.innerHTML=games.map(g=>{
+    body.innerHTML=shown.map(g=>{
       const cls=g.profit>=0?'pos':'neg';const groups=normGroups(g);
-      const detail=groups.map(gp=>`<span class="gp-tag${gp.orgCount>0?' org-tag':''}">${gp.name||'未命名'} 报${gp.people}${gp.attend!=gp.people?'/到'+gp.attend:''}${gp.orgCount>0?'(组'+gp.orgCount+')':''}${gp.extraBalls>0?'+球'+gp.extraBalls:''}</span>`).join(' ');
+      const detail=groups.map(gp=>`<span class="gp-tag${gp.orgCount>0?' org-tag':''}">${esc(gp.name||'未命名')} 报${gp.people}${gp.attend!=gp.people?'/到'+gp.attend:''}${gp.orgCount>0?'(组'+gp.orgCount+')':''}${num(gp.extraBalls)>0?'+额外¥'+num(gp.extraBalls).toFixed(0):''}</span>`).join(' ');
       return `<tr>
         <td><span style="cursor:pointer;color:var(--blue);font-weight:600" onclick="toggleDetail(${g.id})">${g.date} ▸</span></td>
-        <td style="text-align:left">${g.platform||'-'}</td><td>${g.duration||'-'}</td>
+        <td style="text-align:left">${esc(g.platform||'-')}</td><td>${esc(g.duration||'-')}</td>
         <td style="text-align:left;max-width:300px">${detail}</td>
         <td>${g.totalPeople||0}</td><td style="color:var(--purple);font-weight:600">${g.totalOrg||0}</td>
         <td>${fmt(g.totalCost)}</td><td>${fmt(g.totalIncome)}</td>
         <td>${g.recycle>0?g.recycle+'个<br><span style="font-size:10px;color:var(--purple)">'+fmt(g.recycleIncome)+'</span>':'-'}</td>
         <td class="p-cell ${cls}">${g.profit>=0?'+':''}${fmt(g.profit)}</td>
-        <td class="op-cell"><button class="edit-btn" onclick="editGame(${g.id})">✏️编辑</button><button class="del-btn" onclick="delGame(${g.id})">🗑删除</button></td></tr>
+        <td class="op-cell"><button class="bill-btn" onclick="showBill(${g.id})">📢账单</button><button class="edit-btn" onclick="editGame(${g.id})">✏️编辑</button><button class="del-btn" onclick="delGame(${g.id})">🗑删除</button></td></tr>
       <tr id="detail-${g.id}" style="display:none"><td colspan="11" style="background:#f8fafc;padding:10px 20px">
         <div class="group-detail">${groups.map(gp=>{
-          const bc=gp.ballUsed*gp.ballUnit;
-          const bpp=gp.attend>0?bc/gp.attend:0;
-          const orgCost=gp.orgCount*(gp.price+bpp);
-          const gc=bc+gp.venueCost+orgCost;
-          const regIncome=gp.price*gp.people;const ballIncome=bpp*gp.attend;const extraIncome=gp.extraBalls||0;const diffIncome=gp.ballUsed*(bpp-gp.ballUnit);
-          const gi=regIncome+ballIncome+extraIncome+diffIncome;const gp_=gi-gc;
-          return `<div><b>${gp.name||'未命名'}</b>：<br>　📝 报名费：${gp.people}人 × ¥${gp.price} = <span style="color:var(--blue)">¥${regIncome.toFixed(2)}</span><br>　🏸 球费补收：${gp.attend}人 × ¥${bpp.toFixed(2)} = <span style="color:var(--blue)">¥${ballIncome.toFixed(2)}</span>${gp.extraBalls>0?'<br>　➕ 额外收入：<span style="color:var(--blue)">¥'+extraIncome.toFixed(2)+'</span>':''}<br>　📊 球费差价：${gp.ballUsed}球 × (¥${bpp.toFixed(2)}-¥${gp.ballUnit}) = <span style="color:var(--blue)">¥${diffIncome.toFixed(2)}</span><br>　💰 收益合计：<span style="color:var(--blue);font-weight:600">¥${gi.toFixed(2)}</span><br>　📉 成本：球${gp.ballUsed}×¥${gp.ballUnit}=¥${bc.toFixed(2)} + 场地¥${gp.venueCost.toFixed(2)}${gp.orgCount>0?' + 组织者'+gp.orgCount+'×(¥'+gp.price+'+¥'+bpp.toFixed(2)+')=¥'+orgCost.toFixed(2):''} = <span style="color:var(--orange);font-weight:600">¥${gc.toFixed(2)}</span><br>　<span style="color:${gp_>=0?'var(--green)':'var(--red)'};font-weight:700;font-size:13px">净收益：${gp_>=0?'+':''}¥${gp_.toFixed(2)}</span></div>`;
+          const bc=num(gp.ballCost)||r2(num(gp.ballUsed)*num(gp.ballUnit));
+          const bpp=num(gp.ballPricePerPerson)||(gp.attend>0?r2(bc/gp.attend):0);
+          const regIncome=r2(num(gp.price)*gp.people);const ballIncome=r2(bpp*gp.attend);const extraIncome=num(gp.extraBalls);const diffIncome=r2(gp.ballUsed*(bpp-num(gp.ballUnit)));
+          const gi=r2(regIncome+ballIncome+extraIncome+diffIncome);const gc=r2(bc+num(gp.venueCost)+gp.orgCount*(num(gp.price)+bpp));const gp_=r2(gi-gc);
+          return `<div><b>${esc(gp.name||'未命名')}</b>：<br>　📝 报名费：${gp.people}人 × ¥${num(gp.price).toFixed(2)} = <span style="color:var(--blue)">¥${regIncome.toFixed(2)}</span><br>　🏸 球费补收：${gp.attend}人 × ¥${bpp.toFixed(2)} = <span style="color:var(--blue)">¥${ballIncome.toFixed(2)}</span>${extraIncome>0?'<br>　➕ 额外收入：<span style="color:var(--blue)">¥'+extraIncome.toFixed(2)+'</span>':''}<br>　📊 球费差价：${gp.ballUsed}球 × (¥${bpp.toFixed(2)}-¥${num(gp.ballUnit).toFixed(2)}) = <span style="color:var(--blue)">¥${diffIncome.toFixed(2)}</span><br>　💰 收益合计：<span style="color:var(--blue);font-weight:600">¥${gi.toFixed(2)}</span><br>　📉 成本：球${gp.ballUsed}×¥${num(gp.ballUnit).toFixed(2)}=¥${bc.toFixed(2)} + 场地¥${num(gp.venueCost).toFixed(2)}${gp.orgCount>0?' + 组织者'+gp.orgCount+'×(¥'+num(gp.price).toFixed(2)+'+¥'+bpp.toFixed(2)+')=¥'+r2(gp.orgCount*(num(gp.price)+bpp)).toFixed(2):''} = <span style="color:var(--orange);font-weight:600">¥${gc.toFixed(2)}</span><br>　👤 人均应付：¥${num(gp.price).toFixed(2)}+¥${bpp.toFixed(2)} = <span style="font-weight:700">¥${r2(num(gp.price)+bpp).toFixed(2)}</span><br>　<span style="color:${gp_>=0?'var(--green)':'var(--red)'};font-weight:700;font-size:13px">净收益：${gp_>=0?'+':''}¥${gp_.toFixed(2)}</span></div>`;
         }).join('')}</div>
       </td></tr>`;
     }).join('');
@@ -436,7 +617,9 @@ function renderGame(){
   renderGameChart();
 }
 function toggleDetail(id){const tr=document.getElementById('detail-'+id);tr.style.display=tr.style.display==='none'?'table-row':'none'}
+function setChartOffline(sel,off){const w=document.querySelector(sel)?document.querySelector(sel).closest('.chart-wrap'):null;if(w)w.classList.toggle('chart-offline',off)}
 function renderGameChart(){
+  const off=typeof Chart==='undefined';setChartOffline('#gameChart',off);if(off)return;
   const ctx=document.getElementById('gameChart').getContext('2d');if(charts.game)charts.game.destroy();
   const sorted=[...games].sort((a,b)=>a.date.localeCompare(b.date));
   charts.game=new Chart(ctx,{type:'bar',data:{labels:sorted.map(g=>g.date.slice(5)),datasets:[{label:'盈亏',data:sorted.map(g=>g.profit),backgroundColor:sorted.map(g=>g.profit>=0?'#10b981':'#ef4444'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'真实盈亏：'+(c.parsed.y>=0?'+':'')+'¥'+c.parsed.y.toFixed(2)}}},scales:{y:{beginAtZero:false,ticks:{callback:v=>'¥'+v}}}}});
@@ -444,37 +627,48 @@ function renderGameChart(){
 
 // ===== 库存台账 =====
 document.getElementById('iDate').valueAsDate=new Date();
-function calcInv(){const bk=num(document.getElementById('iBk').value),p=num(document.getElementById('iPrice').value);document.getElementById('iAmount').value=fmt(bk*p);document.getElementById('iBalls').value=bk*12+'只'}
-function resetInvForm(){editingInvId=null;document.querySelector('#panel1 .btn-primary').textContent='保存记录';['iChannel','iBrand','iBk','iPrice'].forEach(id=>document.getElementById(id).value='');document.getElementById('iDate').valueAsDate=new Date();calcInv()}
-function saveInv(){const d=document.getElementById('iDate').value,bk=num(document.getElementById('iBk').value),p=num(document.getElementById('iPrice').value);if(!d){alert('请选择日期');return}if(!bk||!p){alert('请填写桶数和单价');return}invs.push({id:Date.now(),date:d,channel:document.getElementById('iChannel').value,brand:document.getElementById('iBrand').value,buckets:bk,pricePerBucket:p,totalAmount:bk*p,totalBalls:bk*12});invs.sort((a,b)=>b.date.localeCompare(a.date));saveData();resetInvForm();renderInv()}
+function calcInv(){const bk=num(document.getElementById('iBk').value),p=num(document.getElementById('iPrice').value),bpb=num(document.getElementById('iBpb').value)||12;document.getElementById('iAmount').value=fmt(bk*p);document.getElementById('iBalls').value=bk*bpb+'只'}
+function resetInvForm(){editingInvId=null;document.getElementById('saveInvBtn').textContent='保存记录';['iChannel','iBrand','iBk','iPrice'].forEach(id=>document.getElementById(id).value='');document.getElementById('iBpb').value=12;document.getElementById('iDate').valueAsDate=new Date();calcInv()}
+function saveInv(){const d=document.getElementById('iDate').value,bk=num(document.getElementById('iBk').value),p=num(document.getElementById('iPrice').value),bpb=num(document.getElementById('iBpb').value)||12;if(!d){alert('请选择日期');return}if(!bk||!p){alert('请填写桶数和单价');return}if(editingInvId){invs=invs.filter(i=>i.id!==editingInvId);editingInvId=null}invs.push({id:uid(),date:d,channel:document.getElementById('iChannel').value.trim(),brand:document.getElementById('iBrand').value.trim(),buckets:bk,pricePerBucket:p,ballsPerBucket:bpb,totalAmount:r2(bk*p),totalBalls:bk*bpb});invs.sort((a,b)=>b.date.localeCompare(a.date));saveData();resetInvForm();renderInv();showToast('✅ 已保存采购记录')}
 function editInv(id){
   const i=invs.find(x=>x.id===id);if(!i)return;editingInvId=id;
-  document.getElementById('iDate').value=i.date;document.getElementById('iChannel').value=i.channel||'';document.getElementById('iBrand').value=i.brand||'';document.getElementById('iBk').value=i.buckets;document.getElementById('iPrice').value=i.pricePerBucket;calcInv();
-  document.querySelector('#panel1 .form-box').scrollIntoView({behavior:'smooth'});document.querySelector('#panel1 .btn-primary').textContent='✏️ 保存修改';
+  document.getElementById('iDate').value=i.date;document.getElementById('iChannel').value=i.channel||'';document.getElementById('iBrand').value=i.brand||'';document.getElementById('iBk').value=i.buckets;document.getElementById('iPrice').value=i.pricePerBucket;document.getElementById('iBpb').value=i.ballsPerBucket||12;calcInv();
+  document.querySelector('#panel1 .form-box').scrollIntoView({behavior:'smooth'});document.getElementById('saveInvBtn').textContent='✏️ 保存修改';
 }
-function delInv(id){if(!confirm('删除这条采购记录？'))return;invs=invs.filter(i=>i.id!==id);saveData();renderInv()}
+function delInv(id){
+  const idx=invs.findIndex(i=>i.id===id);if(idx<0)return;
+  const removed=invs.splice(idx,1)[0];
+  saveData();renderInv();
+  showToast('已删除 '+removed.date+' 的采购记录',()=>{invs.splice(Math.min(idx,invs.length),0,removed);saveData();renderInv();showToast('已恢复')});
+}
 function renderInv(){
   let tc=0,tb=0,tbl=0;invs.forEach(i=>{tc+=i.totalAmount;tb+=i.buckets;tbl+=i.totalBalls});
+  refreshBallTypeOptions();
   let consumed=0;games.forEach(g=>normGroups(g).forEach(gp=>consumed+=num(gp.ballUsed)));
   const stock=tbl-consumed;
   document.getElementById('iTotalCost').textContent=fmt(tc);document.getElementById('iBuckets').textContent=tb;document.getElementById('iInbound').textContent=tbl+'只';document.getElementById('iConsumed').textContent=consumed+'只';
   const se=document.getElementById('iStock');se.textContent=stock+'只';se.className='s-value '+(stock>=0?'pos':'neg');
   const body=document.getElementById('invBody'),empty=document.getElementById('invEmpty');
   if(invs.length===0){body.innerHTML='';empty.style.display='block'}
-  else{empty.style.display='none';body.innerHTML=invs.map(i=>`<tr><td>${i.date}</td><td style="text-align:left">${i.channel||'-'}</td><td style="text-align:left">${i.brand||'-'}</td><td>${i.buckets}</td><td>${fmt(i.pricePerBucket)}</td><td>${fmt(i.totalAmount)}</td><td>${i.totalBalls}只</td><td class="op-cell"><button class="edit-btn" onclick="editInv(${i.id})">✏️编辑</button><button class="del-btn" onclick="delInv(${i.id})">🗑删除</button></td></tr>`).join('')}
+  else{empty.style.display='none';body.innerHTML=invs.map(i=>`<tr><td>${i.date}</td><td style="text-align:left">${esc(i.channel||'-')}</td><td style="text-align:left">${esc(i.brand||'-')}</td><td>${i.buckets}</td><td>${fmt(i.pricePerBucket)}</td><td>${fmt(i.totalAmount)}</td><td>${i.totalBalls}只</td><td class="op-cell"><button class="edit-btn" onclick="editInv(${i.id})">✏️编辑</button><button class="del-btn" onclick="delInv(${i.id})">🗑删除</button></td></tr>`).join('')}
 }
 
 // ===== 资金支出 =====
 document.getElementById('eDate').valueAsDate=new Date();
 function calcExp(){const q=num(document.getElementById('eQty').value),u=num(document.getElementById('eUnit').value);document.getElementById('eAmount').value=fmt(q*u)}
-function resetExpForm(){editingExpId=null;document.querySelector('#panel2 .btn-primary').textContent='保存记录';['eChannel','eItem','eQty','eUnit'].forEach(id=>document.getElementById(id).value='');document.getElementById('eDate').valueAsDate=new Date();calcExp()}
-function saveExp(){const d=document.getElementById('eDate').value,item=document.getElementById('eItem').value,q=num(document.getElementById('eQty').value),u=num(document.getElementById('eUnit').value);if(!d){alert('请选择日期');return}if(!item){alert('请填写商品名');return}if(!q||!u){alert('请填写数量和单价');return}expenses.push({id:Date.now(),date:d,channel:document.getElementById('eChannel').value,item,quantity:q,unitPrice:u,totalAmount:q*u});expenses.sort((a,b)=>b.date.localeCompare(a.date));saveData();resetExpForm();renderExp()}
+function resetExpForm(){editingExpId=null;document.getElementById('saveExpBtn').textContent='保存记录';['eChannel','eItem','eQty','eUnit'].forEach(id=>document.getElementById(id).value='');document.getElementById('eDate').valueAsDate=new Date();calcExp()}
+function saveExp(){const d=document.getElementById('eDate').value,item=document.getElementById('eItem').value.trim(),q=num(document.getElementById('eQty').value),u=num(document.getElementById('eUnit').value);if(!d){alert('请选择日期');return}if(!item){alert('请填写商品名');return}if(!q||!u){alert('请填写数量和单价');return}if(editingExpId){expenses=expenses.filter(e=>e.id!==editingExpId);editingExpId=null}expenses.push({id:uid(),date:d,channel:document.getElementById('eChannel').value.trim(),item,quantity:q,unitPrice:u,totalAmount:r2(q*u)});expenses.sort((a,b)=>b.date.localeCompare(a.date));saveData();resetExpForm();renderExp();showToast('✅ 已保存支出记录')}
 function editExp(id){
   const e=expenses.find(x=>x.id===id);if(!e)return;editingExpId=id;
   document.getElementById('eDate').value=e.date;document.getElementById('eChannel').value=e.channel||'';document.getElementById('eItem').value=e.item;document.getElementById('eQty').value=e.quantity;document.getElementById('eUnit').value=e.unitPrice;calcExp();
-  document.querySelector('#panel2 .form-box').scrollIntoView({behavior:'smooth'});document.querySelector('#panel2 .btn-primary').textContent='✏️ 保存修改';
+  document.querySelector('#panel2 .form-box').scrollIntoView({behavior:'smooth'});document.getElementById('saveExpBtn').textContent='✏️ 保存修改';
 }
-function delExp(id){if(!confirm('删除这条支出记录？'))return;expenses=expenses.filter(e=>e.id!==id);saveData();renderExp()}
+function delExp(id){
+  const idx=expenses.findIndex(x=>x.id===id);if(idx<0)return;
+  const removed=expenses.splice(idx,1)[0];
+  saveData();renderExp();
+  showToast('已删除 '+removed.date+' 的支出记录',()=>{expenses.splice(Math.min(idx,expenses.length),0,removed);saveData();renderExp();showToast('已恢复')});
+}
 function renderExp(){
   let total=0;expenses.forEach(e=>total+=e.totalAmount);
   let ballP=0;invs.forEach(i=>ballP+=i.totalAmount);
@@ -486,7 +680,7 @@ function renderExp(){
   document.getElementById('eFundDetail').textContent='启动'+fmt(initFund)+'+盈利'+fmt(profit)+'-球采购'+fmt(ballP)+'-其他'+fmt(total);
   const body=document.getElementById('expBody'),empty=document.getElementById('expEmpty');
   if(expenses.length===0){body.innerHTML='';empty.style.display='block'}
-  else{empty.style.display='none';body.innerHTML=expenses.map(e=>`<tr><td>${e.date}</td><td style="text-align:left">${e.channel||'-'}</td><td style="text-align:left">${e.item}</td><td>${e.quantity}</td><td>${fmt(e.unitPrice)}</td><td>${fmt(e.totalAmount)}</td><td class="op-cell"><button class="edit-btn" onclick="editExp(${e.id})">✏️编辑</button><button class="del-btn" onclick="delExp(${e.id})">🗑删除</button></td></tr>`).join('')}
+  else{empty.style.display='none';body.innerHTML=expenses.map(e=>`<tr><td>${e.date}</td><td style="text-align:left">${esc(e.channel||'-')}</td><td style="text-align:left">${esc(e.item)}</td><td>${e.quantity}</td><td>${fmt(e.unitPrice)}</td><td>${fmt(e.totalAmount)}</td><td class="op-cell"><button class="edit-btn" onclick="editExp(${e.id})">✏️编辑</button><button class="del-btn" onclick="delExp(${e.id})">🗑删除</button></td></tr>`).join('')}
 }
 
 // ===== 全局汇总 =====
@@ -510,6 +704,7 @@ function renderAll(){
 }
 function saveInitFund(){initFund=num(document.getElementById('initFund').value);localStorage.setItem(SK_F,initFund);renderAll();renderExp()}
 function renderTrendChart(){
+  const off=typeof Chart==='undefined';setChartOffline('#trendChart',off);if(off)return;
   const ctx=document.getElementById('trendChart').getContext('2d');if(charts.trend)charts.trend.destroy();
   const sorted=[...games].sort((a,b)=>a.date.localeCompare(b.date));let cum=0;
   charts.trend=new Chart(ctx,{type:'line',data:{labels:sorted.map(g=>g.date.slice(5)),datasets:[
@@ -519,10 +714,12 @@ function renderTrendChart(){
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>'¥'+v}}}}});
 }
 function renderCostChart(venue,ball){
+  const off=typeof Chart==='undefined';setChartOffline('#costChart',off);if(off)return;
   const ctx=document.getElementById('costChart').getContext('2d');if(charts.cost)charts.cost.destroy();const total=venue+ball;
   charts.cost=new Chart(ctx,{type:'doughnut',data:{labels:['场地费','球费成本'],datasets:[{data:[venue,ball],backgroundColor:['#3b82f6','#f59e0b'],borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>c.label+'：¥'+c.parsed.toFixed(2)+' ('+(c.parsed/(total||1)*100).toFixed(1)+'%)'}}},cutout:'60%'}});
 }
 function renderMonthChart(){
+  const off=typeof Chart==='undefined';setChartOffline('#monthChart',off);if(off)return;
   const ctx=document.getElementById('monthChart').getContext('2d');if(charts.month)charts.month.destroy();const months={};
   games.forEach(g=>{const m=g.date.slice(0,7);if(!months[m])months[m]={income:0,cost:0,profit:0};months[m].income+=g.totalIncome;months[m].cost+=g.totalCost;months[m].profit+=g.profit});
   const labels=Object.keys(months).sort();
@@ -535,9 +732,10 @@ function renderMonthChart(){
 
 // ===== 导入导出 =====
 function exportExcel(){
+  if(typeof XLSX==='undefined'){alert('导出组件未加载（需联网加载 CDN），请检查网络后重试');return}
   const wb=XLSX.utils.book_new();
   // Sheet1: 单场收支
-  const gData=[['场次日期','订场平台','场地时长','场地分组','报名人数','组织者参与','实到人数','人均报名费','人均球费补收','场地费','球消耗','额外加球','球种类','球单价','球成本','球费补收总额','分组成本','分组收入','分组盈亏','旧球回收个数','回收单价','旧球回收收入','整场总成本','整场总收入','整场盈亏']];
+  const gData=[['场次日期','订场平台','场地时长','场地类型','报名人数','组织者参与','实到人数','人均报名费','人均球费补收','场地费','球消耗','额外收入(元)','球种类','球单价','球成本','球费补收总额','分组成本','分组收入','分组盈亏','旧球回收个数','回收单价','旧球回收收入','整场总成本','整场总收入','整场盈亏']];
   let ti=0,tc=0,tp=0,tr=0;
   games.forEach(g=>{ti+=g.totalIncome;tc+=g.totalCost;tp+=g.profit;tr+=g.recycleIncome;normGroups(g).forEach((gp,idx)=>{
     gData.push([idx===0?g.date:'',idx===0?g.platform||'':'',idx===0?g.duration||'':'',gp.name,gp.people,gp.orgCount,gp.attend,gp.price,gp.ballPricePerPerson||0,gp.venueCost,gp.ballUsed,gp.extraBalls||0,gp.ballType||'',gp.ballUnit,gp.ballCost,gp.ballChargeTotal||0,gp.groupCost,gp.groupIncome,gp.groupProfit,idx===0?g.recycle:'',idx===0?g.recycleUnit||3:'',idx===0?g.recycleIncome:'',idx===0?g.totalCost:'',idx===0?g.totalIncome:'',idx===0?g.profit:'']);
@@ -561,6 +759,7 @@ function exportExcel(){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=`羽毛球局收支管理_${new Date().toISOString().slice(0,10)}.xlsx`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  markBackedUp();
 }
 function venueSum(){let v=0;games.forEach(g=>normGroups(g).forEach(gp=>v+=gp.venueCost));return v}
 
@@ -568,31 +767,51 @@ function importExcel(e){
   const file=e.target.files[0];if(!file)return;const reader=new FileReader();
   reader.onload=function(ev){
     try{
-      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});let imported=0;
+      if(typeof XLSX==='undefined')throw new Error('导入组件未加载（需联网加载 CDN）');
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      const hasLocal=games.length>0||invs.length>0||expenses.length>0;
+      let mode='append';
+      if(hasLocal)mode=confirm('检测到本地已有数据。\n\n【确定】覆盖导入：清空现有记录后导入\n【取消】追加导入：保留现有记录，自动跳过重复')?'replace':'append';
+      if(mode==='replace'){games=[];invs=[];expenses=[]}
+      let imported=0,skipped=0;
       if(wb.SheetNames.includes('单场打球收支表')){
         const rows=XLSX.utils.sheet_to_json(wb.Sheets['单场打球收支表'],{header:1});let cur=null;
+        const parseGRow=row=>({name:String(row[3]||'默认'),people:num(row[4]),orgCount:num(row[5]),attend:num(row[6])||num(row[4]),price:num(row[7]),ballPricePerPerson:num(row[8])||0,venueCost:num(row[9]),ballUsed:num(row[10]),extraBalls:num(row[11])||0,ballType:String(row[12]||''),ballUnit:num(row[13]),ballCost:num(row[14]),ballChargeTotal:num(row[15])||0,groupCost:num(row[16]),groupIncome:num(row[17]),groupProfit:num(row[18])});
+        const pushCur=()=>{if(!cur)return;
+          cur.totalPeople=cur.groups.reduce((s,g)=>s+num(g.people),0);
+          cur.totalOrg=cur.groups.reduce((s,g)=>s+num(g.orgCount),0);
+          if(mode==='append'){const dup=games.some(x=>x.date===cur.date&&num(x.totalCost)===num(cur.totalCost)&&num(x.totalIncome)===num(cur.totalIncome)&&x.groups.length===cur.groups.length);if(dup){skipped++;cur=null;return}}
+          games.push(cur);imported++;cur=null;
+        };
         for(let r=1;r<rows.length;r++){
-          const row=rows[r];if(!row[0]&&row[3]==='累计汇总')continue;
-          if(row[0]){
-            if(cur){games.push(cur);imported++}
-            const gp={name:row[3]||'默认',people:num(row[4]),orgCount:num(row[5]),attend:num(row[6])||num(row[4]),price:num(row[7]),ballPricePerPerson:num(row[8])||0,venueCost:num(row[9]),ballUsed:num(row[10]),extraBalls:num(row[11])||0,ballType:row[12]||'',ballUnit:num(row[13]),ballCost:num(row[14]),ballChargeTotal:num(row[15])||0,groupCost:num(row[16]),groupIncome:num(row[17]),groupProfit:num(row[18])};
-            const groups=[];if(gp.people||gp.venueCost||gp.ballUsed||gp.price)groups.push(gp);
-            cur={id:Date.now()+r,date:String(row[0]).slice(0,10),platform:row[1]||'',duration:row[2]||'',groups,recycle:num(row[19]),recycleUnit:num(row[20])||3,recycleIncome:num(row[21]),totalCost:num(row[22]),totalIncome:num(row[23]),profit:num(row[24]),totalPeople:0,totalOrg:0};
-          }else if(cur&&row[3]){cur.groups.push({name:row[3],people:num(row[4]),orgCount:num(row[5]),attend:num(row[6])||num(row[4]),price:num(row[7]),ballPricePerPerson:num(row[8])||0,venueCost:num(row[9]),ballUsed:num(row[10]),extraBalls:num(row[11])||0,ballType:row[12]||'',ballUnit:num(row[13]),ballCost:num(row[14]),ballChargeTotal:num(row[15])||0,groupCost:num(row[16]),groupIncome:num(row[17]),groupProfit:num(row[18])})}
+          const row=rows[r]||[];const c0=String(row[0]||'');
+          if(c0==='累计汇总')continue;
+          if(/^\d{4}-\d{2}-\d{2}/.test(c0)){
+            pushCur();
+            const gp=parseGRow(row);const groups=[];if(gp.people||gp.venueCost||gp.ballUsed||gp.price)groups.push(gp);
+            cur={id:uid(),date:dateNorm(row[0]),platform:String(row[1]||''),duration:String(row[2]||''),groups,recycle:num(row[19]),recycleUnit:num(row[20])||3,recycleIncome:num(row[21]),totalCost:num(row[22]),totalIncome:num(row[23]),profit:num(row[24]),totalPeople:0,totalOrg:0};
+          }else if(cur&&row[3]){cur.groups.push(parseGRow(row))}
         }
-        if(cur){games.push(cur);imported++}games.sort((a,b)=>b.date.localeCompare(a.date));
+        pushCur();games.sort((a,b)=>b.date.localeCompare(a.date));
       }
       if(wb.SheetNames.includes('羽毛球库存台账')){
         const rows=XLSX.utils.sheet_to_json(wb.Sheets['羽毛球库存台账'],{header:1});
-        for(let r=2;r<rows.length;r++){const row=rows[r];if(!row[0]||row[0]==='累计汇总')continue;const bk=num(row[3]),p=num(row[4]);if(!bk&&!p)continue;invs.push({id:Date.now()+r,date:String(row[0]).slice(0,10),channel:row[1]||'',brand:row[2]||'',buckets:bk,pricePerBucket:p,totalAmount:bk*p,totalBalls:bk*12});imported++}
+        for(let r=1;r<rows.length;r++){const row=rows[r]||[];const c0=String(row[0]||'');if(!c0||c0==='累计汇总')continue;const bk=num(row[3]),p=num(row[4]);if(!bk&&!p)continue;
+          const rec={id:uid(),date:dateNorm(row[0]),channel:String(row[1]||''),brand:String(row[2]||''),buckets:bk,pricePerBucket:p,ballsPerBucket:12,totalAmount:r2(bk*p),totalBalls:num(row[6])||bk*12};
+          if(mode==='append'&&invs.some(x=>x.date===rec.date&&x.brand===rec.brand&&num(x.totalAmount)===rec.totalAmount&&x.buckets===rec.buckets)){skipped++;continue}
+          invs.push(rec);imported++}
         invs.sort((a,b)=>b.date.localeCompare(a.date));
       }
       if(wb.SheetNames.includes('资金支出账单')){
         const rows=XLSX.utils.sheet_to_json(wb.Sheets['资金支出账单'],{header:1});
-        for(let r=1;r<rows.length;r++){const row=rows[r];if(!row[0]||row[2]==='累计汇总')continue;const q=num(row[3]),u=num(row[4]);if(!q&&!u)continue;expenses.push({id:Date.now()+r,date:String(row[0]).slice(0,10),channel:row[1]||'',item:row[2]||'',quantity:q,unitPrice:u,totalAmount:q*u});imported++}
+        for(let r=1;r<rows.length;r++){const row=rows[r]||[];const c0=String(row[0]||'');if(!c0||c0==='累计汇总')continue;const q=num(row[3]),u=num(row[4]);if(!q&&!u)continue;
+          const rec={id:uid(),date:dateNorm(row[0]),channel:String(row[1]||''),item:String(row[2]||''),quantity:q,unitPrice:u,totalAmount:r2(q*u)};
+          if(mode==='append'&&expenses.some(x=>x.date===rec.date&&x.item===rec.item&&num(x.totalAmount)===rec.totalAmount)){skipped++;continue}
+          expenses.push(rec);imported++}
         expenses.sort((a,b)=>b.date.localeCompare(a.date));
       }
-      saveData();renderGame();renderInv();renderExp();renderAll();alert(`导入成功！共 ${imported} 条记录`);
+      saveData();renderGame();renderInv();renderExp();renderAll();
+      alert(imported===0&&skipped===0?'未识别到可导入的数据（需包含：单场打球收支表 / 羽毛球库存台账 / 资金支出账单）':`导入完成（${mode==='replace'?'覆盖':'追加'}）：新增 ${imported} 条${skipped?`，跳过重复 ${skipped} 条`:''}`);
     }catch(err){alert('导入失败：'+err.message)}
   };
   reader.readAsArrayBuffer(file);e.target.value='';
@@ -604,17 +823,86 @@ function clearAll(){
   games=[];invs=[];expenses=[];saveData();renderGame();renderInv();renderExp();renderAll();
 }
 
+// ===== 公示账单 =====
+let billGameId=null;
+function weekDay(dateStr){try{return '周'+'日一二三四五六'.charAt(new Date(dateStr+'T00:00:00').getDay())}catch(e){return ''}}
+function showBill(id){
+  const g=games.find(x=>x.id===id);if(!g)return;billGameId=id;
+  document.getElementById('billCard').innerHTML=buildBillHtml(g);
+  document.getElementById('billModal').classList.add('show');
+}
+function closeBillModal(){document.getElementById('billModal').classList.remove('show')}
+function billGroupLines(g){
+  const bc=num(g.ballCost)||r2(num(g.ballUsed)*num(g.ballUnit));
+  const bpp=num(g.ballPricePerPerson)||(g.attend>0?r2(bc/g.attend):0);
+  return {bc,bpp,per:r2(num(g.price)+bpp)};
+}
+function buildBillHtml(g){
+  const groups=normGroups(g);const tp=num(g.totalPeople)||groups.reduce((s,x)=>s+num(x.people),0);
+  const avg=tp>0?num(g.totalIncome)/tp:0;const p=num(g.profit);
+  let h=`<h4>🏸 羽毛球活动公示账单</h4><div class="bill-date">${g.date} ${weekDay(g.date)}${g.duration?' · 时长 '+esc(g.duration)+' 小时':''} · 报名 ${tp} 人</div>`;
+  groups.forEach(gp=>{
+    const {bc,bpp,per}=billGroupLines(gp);
+    h+=`<div class="bill-line"><span>🏟️ ${esc(gp.name||'未命名')}</span><span>报名${gp.people}人 / 实到${gp.attend}人${gp.orgCount>0?` / 组织者参与${gp.orgCount}人`:''}</span></div>`;
+    h+=`<div class="bill-line"><span>　场地费</span><span>${fmt(gp.venueCost)}</span></div>`;
+    h+=`<div class="bill-line"><span>　球费（${gp.ballUsed}只 × ¥${num(gp.ballUnit).toFixed(2)}）</span><span>${fmt(bc)}</span></div>`;
+    h+=`<div class="bill-line"><span>　人均应付（报名费 ¥${num(gp.price).toFixed(2)} + 球费补收 ¥${bpp.toFixed(2)}）</span><span>¥${per.toFixed(2)}</span></div>`;
+  });
+  h+=`<div class="bill-total"><span>支出合计</span><span>${fmt(g.totalCost)}</span></div>`;
+  h+=`<div class="bill-total"><span>收入合计</span><span>${fmt(g.totalIncome)}</span></div>`;
+  if(num(g.recycle)>0)h+=`<div class="bill-line"><span>♻️ 旧球回收 ${num(g.recycle)}个 × ¥${num(g.recycleUnit).toFixed(2)}（已计入收入）</span><span>${fmt(g.recycleIncome)}</span></div>`;
+  h+=`<div class="bill-total" style="color:${p>=0?'var(--green-dark)':'var(--red)'}"><span>本场盈亏</span><span>${p>=0?'+':''}${fmt(p)}${tp>0?'（人均 ¥'+avg.toFixed(2)+'）':''}</span></div>`;
+  h+=`<div class="bill-note">💡 本场不盈利，如有结余将结转下期，用于购球、场地等公共开支</div>`;
+  return h;
+}
+function buildBillText(g){
+  const groups=normGroups(g);const tp=num(g.totalPeople)||groups.reduce((s,x)=>s+num(x.people),0);
+  const avg=tp>0?num(g.totalIncome)/tp:0;const p=num(g.profit);const L=[];
+  L.push(`${g.date.slice(5).replace('-','.')} 费用明细`);
+  groups.forEach(gp=>{
+    const {bc,bpp,per}=billGroupLines(gp);
+    L.push(`${gp.name||'未命名'} 用球：${gp.ballType||'—'} ${gp.ballUsed}/个 总${gp.people}人${gp.attend!=gp.people?` 实到${gp.attend}人`:''}${gp.orgCount>0?`（组织者${gp.orgCount}人参与）`:''}`);
+    L.push(`场地费 ${fmt(gp.venueCost)}`);
+    L.push(`球费 ${bpp.toFixed(2)} × ${gp.attend} = ${fmt(r2(bpp*gp.attend))}`);
+    L.push(`人均应付 ${per.toFixed(2)}（报名费${num(gp.price).toFixed(2)}+球费${bpp.toFixed(2)}）`);
+  });
+  if(num(g.recycle)>0)L.push(`旧球回收 ${num(g.recycle)}个 × ¥${num(g.recycleUnit).toFixed(2)} = ${fmt(g.recycleIncome)}（已计入收入）`);
+  L.push(`—— 支出合计 ${fmt(g.totalCost)}`);
+  L.push(`—— 收入合计 ${fmt(g.totalIncome)}`);
+  L.push(`—— 本场盈亏 ${p>=0?'+':''}${fmt(p)}${tp>0?`（人均 ¥${avg.toFixed(2)}）`:''}`);
+  L.push('💡 如有结余将结转下期，用于购球、场地等公共开支');
+  return L.join('\n');
+}
+function copyBill(){
+  const g=games.find(x=>x.id===billGameId);if(!g)return;
+  copyText(buildBillText(g),'账单文本已复制，可粘贴到微信群');
+}
+function copyText(text,okMsg){
+  const done=()=>alert('✅ '+okMsg);
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done))}else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){alert('复制失败，请用"保存图片"方式分享')}document.body.removeChild(ta)}
+async function exportBillImage(){
+  const g=games.find(x=>x.id===billGameId);if(!g)return;
+  const el=document.getElementById('billCard');
+  if(typeof html2canvas==='undefined'){alert('图片组件未加载（需联网加载 CDN），可先用"复制文本"');return}
+  try{
+    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff'});
+    const a=document.createElement('a');a.download=`羽毛球公示账单_${g.date}.png`;a.href=canvas.toDataURL('image/png');a.click();
+  }catch(err){alert('导出失败：'+err.message)}
+}
+
 // ===== GitHub =====
 function getGhConfig(){try{return JSON.parse(localStorage.getItem(SK_GH)||'{}')}catch(e){return {}}}
 let ghAction=null;
-function openGhModal(){const cfg=getGhConfig();document.getElementById('ghOwner').value=cfg.owner||'StudyingCoder1';document.getElementById('ghRepo').value=cfg.repo||'badminton-data';document.getElementById('ghBranch').value=cfg.branch||'main';document.getElementById('ghPath').value=cfg.path||'data/records.json';document.getElementById('ghToken').value='';document.querySelector('#ghModal .btn-primary').textContent=ghAction==='sync'?'☁️ 确认同步':ghAction==='pull'?'⬇️ 确认拉取':'保存';document.getElementById('ghModal').classList.add('show')}
+function openGhModal(){const cfg=getGhConfig();document.getElementById('ghOwner').value=cfg.owner||'StudyingCoder1';document.getElementById('ghRepo').value=cfg.repo||'badminton-data';document.getElementById('ghBranch').value=cfg.branch||'main';document.getElementById('ghPath').value=cfg.path||'data/records.json';document.getElementById('ghToken').value='';document.getElementById('ghToken').placeholder=cfg.token?'已保存，留空沿用':'ghp_xxx';document.querySelector('#ghModal .btn-primary').textContent=ghAction==='sync'?'☁️ 确认同步':ghAction==='pull'?'⬇️ 确认拉取':'保存';document.getElementById('ghModal').classList.add('show')}
 function closeGhModal(){document.getElementById('ghModal').classList.remove('show')}
 function openTipsModal(){document.getElementById('tipsModal').classList.add('show')}
 function closeTipsModal(){document.getElementById('tipsModal').classList.remove('show')}
-function saveGhConfig(){const cfg={owner:document.getElementById('ghOwner').value.trim(),repo:document.getElementById('ghRepo').value.trim(),branch:document.getElementById('ghBranch').value.trim()||'main',path:document.getElementById('ghPath').value.trim()||'data/records.json',token:document.getElementById('ghToken').value.trim()};if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写Token');return}localStorage.setItem(SK_GH,JSON.stringify(cfg));closeGhModal();const a=ghAction;ghAction=null;if(a==='sync')doSync();else if(a==='pull')doPull();else alert('✅ 配置已保存')}
+function saveGhConfig(){const old=getGhConfig();const tok=document.getElementById('ghToken').value.trim();const cfg={owner:document.getElementById('ghOwner').value.trim(),repo:document.getElementById('ghRepo').value.trim(),branch:document.getElementById('ghBranch').value.trim()||'main',path:document.getElementById('ghPath').value.trim()||'data/records.json',token:tok||old.token||''};if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写仓库信息和Token');return}localStorage.setItem(SK_GH,JSON.stringify(cfg));closeGhModal();const a=ghAction;ghAction=null;if(a==='sync')doSync();else if(a==='pull')doPull();else alert('✅ 配置已保存')}
 function b64encode(str){return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,(m,p)=>String.fromCharCode('0x'+p)))}
 function b64decode(b64){return decodeURIComponent(atob(b64).split('').map(c=>'%'+c.charCodeAt(0).toString(16).padStart(2,'0')).join(''))}
-function githubSync(){ghAction='sync';openGhModal()}
+function githubSync(){const cfg=getGhConfig();if(cfg.owner&&cfg.repo&&cfg.token){ghAction=null;doSync()}else{ghAction='sync';openGhModal()}}
 async function doSync(){
   const cfg=getGhConfig();if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写Token');return}
   const btn=document.querySelector('button[onclick="githubSync()"]'),old=btn.textContent;btn.textContent='⏳ 同步中';btn.disabled=true;
@@ -626,10 +914,11 @@ async function doSync(){
     if(sha)payload.sha=sha;
     const r=await fetch(url,{method:'PUT',headers:h,body:JSON.stringify(payload)});
     if(!r.ok){const e=await r.json();throw new Error(e.message||'HTTP '+r.status)}
+    markBackedUp();
     btn.textContent='✅ 已同步';setTimeout(()=>{btn.textContent=old;btn.disabled=false},2000);alert('✅ 同步成功！');
   }catch(err){btn.textContent=old;btn.disabled=false;alert('❌ 失败：'+err.message)}
 }
-function githubPull(){ghAction='pull';openGhModal()}
+function githubPull(){const cfg=getGhConfig();if(cfg.owner&&cfg.repo&&cfg.token){ghAction=null;doPull()}else{ghAction='pull';openGhModal()}}
 async function doPull(){
   const cfg=getGhConfig();if(!cfg.owner||!cfg.repo||!cfg.token){alert('请填写Token');return}
   if(!confirm('拉取会覆盖本地数据，确定？'))return;
@@ -647,8 +936,9 @@ async function doPull(){
 }
 
 // 初始化
-addGroup();calcGame();renderGame();
-if(games.length>0){const l=games[games.length-1];if(l.groups&&l.groups[0]){const g=l.groups[0];if(g.ballUnit)document.querySelector('.gp-ballunit').value=g.ballUnit;if(g.price)document.querySelector('.gp-price').value=g.price;calcGame()}}
+addGroup();calcGame();renderGame();checkBackupReminder();
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='127.0.0.1'||location.hostname==='localhost')){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+if(games.length>0){const l=games[0];if(l.groups&&l.groups[0]){const g=l.groups[0];if(g.name)document.querySelector('.gp-name').value=g.name;if(g.ballUnit)document.querySelector('.gp-ballunit').value=g.ballUnit;if(g.price)document.querySelector('.gp-price').value=g.price;calcGame()}}
 </script>
 </body>
 </html>
