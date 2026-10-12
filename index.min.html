@@ -88,7 +88,7 @@ function getBallOptions(sel){
 const t=getBallTypes();const keys=Object.keys(t);
 if(keys.length===0)return '<option value="">先在库存台账添加采购</option>';
 let h='<option value="">选择球种类</option>';
-keys.forEach(b=>{const p=getBallPrice(b).toFixed(2);h+=`<option value="${esc(b)}" data-price="${p}"${b===sel?' selected':''}>${esc(b)} (¥${p}/个)</option>`});
+keys.forEach(b=>{const c=t[b].up.toFixed(2);const p=getBallPrice(b).toFixed(2);h+=`<option value="${esc(b)}"${b===sel?' selected':''}>${esc(b)}（成本¥${c} · 定价¥${p}）</option>`});
 return h;
 }
 function getBallPrice(brand){
