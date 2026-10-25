@@ -53,6 +53,7 @@
 | `bm_ball_prices` | `{品牌: 定价}`（预置：红超18/橙超8/华美F6 8） |
 | `bm_channels` | 采购渠道列表（预置：拼多多/淘宝/京东/阿里巴巴，支持下拉新增） |
 | `bm_brands` | 球品牌列表（预置：橙超/红超/金红超，支持下拉新增） |
+| `bm_platforms` / `bm_durations` / `bm_price_opts` / `bm_bucket_sizes` / `bm_exp_channels` / `bm_exp_items` / `bm_recycle_prices` | **下拉化的可枚举字段**（订场平台/场地时长/人均报名费/每桶球数/支出渠道/商品名/回收单价）：选项 = 存储列表 ∪ 历史记录值；新增走通用 listModal，数字类字段校验必须为正数（`onListChange` 第4参 type='number'），文字类非空≤20字 |
 | `bm_last_backup` / `bm_backup_snooze` / `bm_first_use` | 备份提醒用的时间戳 |
 | `bm_venues` | ⚠️ 旧版键，读取时自动迁移到 bm_court_types |
 
@@ -76,7 +77,7 @@
 
 旧格式分组（顶层 ballType/ballUsed/extraBalls/ballPrice/ballUnit）由 `normGroups()` 自动转为 balls[] 兼容读取。
 
-**库存 invs[i]**：`{id,date,channel,brand,buckets,pricePerBucket,ballsPerBucket,totalAmount,totalBalls}`
+**库存 invs[i]**：`{id,date,channel,brand,buckets,pricePerBucket,ballsPerBucket,totalAmount,totalBalls}`（表单只填 桶数+采购总金额，pricePerBucket=总额÷桶数 自动算）
 **支出 expenses[i]**：`{id,date,channel,item,quantity,unitPrice,totalAmount}`
 
 ## 5. 核心计费模型（最重要的业务逻辑）
@@ -142,7 +143,7 @@
 ```
 其他表末列均为「记录ID」。导入规则：
 - **分组识别**：第 4 列（场地类型）非空 = 新分组开始；第 4 列空但 13/11/12 列有值 = 上一分组的追加球种行
-- **去重**（追加模式）：文件带记录ID（第 27/8/7/6 列）时**只按 ID 去重**（同日同配置不同 ID 的合法记录不会被误吞）；无 ID（旧文件）退回 启发式（日期+金额+分组数）
+- **去重**（追加模式）：文件带记录ID（第 27/8/7/6 列）时**只按 ID 去重**；若 ID 相同但内容不同（ID 生成器历史碰撞）→ 视为不同记录自动换新 ID 入库，不丢数据；无 ID（旧文件）退回 启发式（日期+金额+品牌/分组数）
 - 导入前自动备份（失败则中止）；品牌定价仅在本地无记忆时写入；启动资金：覆盖模式采用文件值，追加模式仅本地为 0 时采用
 - 结果弹窗列出跳过明细（日期+金额）
 
